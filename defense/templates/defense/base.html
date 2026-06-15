@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AIMS Senegal Thesis Defense{% endblock %}</title>
+    {% load static %}
+    <style>
+        :root {
+            --aims-red: #6B0B1F;
+            --aims-dark: #4a0814;
+            --aims-light: #f8f0f2;
+            --aims-cream: #fdfaf8;
+            --aims-gold: #c9a84c;
+            --white: #ffffff;
+            --gray-100: #f5f5f5;
+            --gray-200: #e8e8e8;
+            --gray-600: #555;
+            --green: #2e7d32;
+            --orange: #e65100;
+            --shadow: 0 2px 12px rgba(107,11,31,0.10);
+            --shadow-lg: 0 8px 32px rgba(107,11,31,0.15);
+            --radius: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--aims-cream);
+            color: #222;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Watermark background logo */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background-image: url("{% static 'defense/img/aims-logo.jpg' %}");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+
+        /* NAV */
+        nav {
+            background: var(--aims-red);
+            color: white;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+        }
+
+        nav .brand img {
+            height: 42px;
+            border-radius: 4px;
+        }
+
+        nav .brand-text {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        nav .brand-sub {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        nav .nav-links a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        nav .nav-links a:hover { color: white; }
+
+        /* MAIN CONTENT */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            color: var(--aims-red);
+            font-weight: 700;
+        }
+
+        .page-header p {
+            color: var(--gray-600);
+            margin-top: 0.3rem;
+        }
+
+        /* CARDS */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.5rem 1.2rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--aims-red);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--aims-dark); color: white; }
+
+        .btn-success {
+            background: var(--green);
+            color: white;
+        }
+        .btn-success:hover { background: #1b5e20; color: white; }
+
+        .btn-warning {
+            background: #f57c00;
+            color: white;
+        }
+        .btn-warning:hover { background: #e65100; }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--aims-red);
+            color: var(--aims-red);
+        }
+        .btn-outline:hover { background: var(--aims-light); }
+
+        .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
+
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .badge-pending { background: #fff3e0; color: #e65100; }
+        .badge-ongoing { background: #e3f2fd; color: #1565c0; }
+        .badge-done { background: #e8f5e9; color: #2e7d32; }
+
+        /* TABLE */
+        .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            background: var(--aims-red);
+            color: white;
+            padding: 0.8rem 1rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        tbody tr {
+            border-bottom: 1px solid var(--gray-200);
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: var(--aims-light); }
+        tbody tr.done-row { background: #e8f5e9 !important; }
+        tbody tr.ongoing-row { background: #e3f2fd !important; }
+        td { padding: 0.75rem 1rem; font-size: 0.9rem; vertical-align: middle; }
+
+        /* FORMS */
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem; color: #333; }
+        label .req { color: var(--aims-red); }
+        input[type=text], input[type=email], input[type=file], textarea, select {
+            width: 100%;
+            padding: 0.6rem 0.9rem;
+            border: 1.5px solid var(--gray-200);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background: white;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--aims-red);
+            box-shadow: 0 0 0 3px rgba(107,11,31,0.08);
+        }
+
+        /* SCORE GRID */
+        .score-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .score-option input[type=radio] { display: none; }
+        .score-option label {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--gray-100);
+            border: 2px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.95rem;
+            color: #555;
+        }
+        .score-option input[type=radio]:checked + label {
+            background: var(--aims-red);
+            color: white;
+            border-color: var(--aims-red);
+            transform: scale(1.1);
+        }
+        .score-option label:hover {
+            border-color: var(--aims-red);
+            color: var(--aims-red);
+        }
+
+        /* ALERTS */
+        .alert {
+            padding: 0.9rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .alert-error { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
+        .alert-success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+        .alert-info { background: #e3f2fd; color: #1565c0; border-left: 4px solid #1565c0; }
+
+        /* MESSAGES */
+        .messages { list-style: none; margin-bottom: 1rem; }
+        .messages li { padding: 0.8rem 1.2rem; border-radius: 8px; margin-bottom: 0.5rem; }
+        .messages .success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+        .messages .error { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
+
+        /* FOOTER */
+        footer {
+            background: var(--aims-red);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.8rem;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            nav { padding: 0 1rem; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="page-wrapper">
+{% load static %}
+<nav>
+    <a href="{% url 'landing' %}" class="brand">
+        <img src="{% static 'defense/img/aims-logo.jpg' %}" alt="AIMS">
+        <div>
+            <div class="brand-text">AIMS Senegal</div>
+            <div class="brand-sub">Thesis Defense Portal</div>
+        </div>
+    </a>
+    <div class="nav-links">
+        {% if request.session.authenticated %}
+        <a href="{% url 'sessions_list' %}">Sessions</a>
+        <a href="/admin/">Admin</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="container">
+    {% if messages %}
+    <ul class="messages">
+        {% for m in messages %}
+        <li class="{{ m.tags }}">{{ m }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<footer>
+    &copy; {% now "Y" %} African Institute for Mathematical Sciences, Senegal - All Rights Reserved
+</footer>
+</div>
+</body>
+</html>

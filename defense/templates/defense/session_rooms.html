@@ -1,0 +1,118 @@
+{% extends "defense/base.html" %}
+{% block title %}{{ session.name }} - Rooms{% endblock %}
+{% block extra_css %}
+<style>
+.back-link { display:inline-flex;align-items:center;gap:6px;color:var(--aims-red);text-decoration:none;font-size:0.9rem;margin-bottom:1.5rem;font-weight:500; }
+.back-link:hover { text-decoration:underline; }
+.rooms-grid { display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:1.5rem; }
+.room-block {
+    background:white;border-radius:16px;
+    box-shadow:var(--shadow-lg);overflow:hidden;
+    transition:transform 0.2s,box-shadow 0.2s;
+    cursor:pointer;text-decoration:none;display:block;
+}
+.room-block:hover { transform:translateY(-4px);box-shadow:0 16px 48px rgba(107,11,31,0.2); }
+.room-header {
+    background:var(--aims-red);color:white;
+    padding:2rem;text-align:center;position:relative;overflow:hidden;
+}
+.room-header::before {
+    content:'';position:absolute;top:-40px;right:-40px;
+    width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.08);
+}
+.room-header h2 { font-size:1.6rem;font-weight:800;letter-spacing:1px;position:relative;z-index:1; }
+.room-icon {
+    width:64px;height:64px;background:rgba(255,255,255,0.15);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    margin:0 auto 1rem;position:relative;z-index:1;
+}
+.room-body { padding:1.5rem 2rem; }
+.room-stat { display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--gray-200); }
+.room-stat:last-child { border-bottom:none; }
+.room-stat .label { color:#666;font-size:0.88rem; }
+.room-stat .val { font-weight:700;color:var(--aims-red);font-size:1rem; }
+.room-cta { display:flex;align-items:center;justify-content:center;gap:8px;background:var(--aims-light);color:var(--aims-red);padding:1rem;font-weight:700;font-size:0.95rem;transition:background 0.2s; }
+.room-block:hover .room-cta { background:#f5dde2; }
+.session-info { background:white;border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow);display:flex;gap:2rem;flex-wrap:wrap; }
+.info-item { font-size:0.88rem;color:#555; }
+.info-item strong { color:#222; }
+.download-bar { display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:2rem;align-items:center; }
+.download-bar span { font-size:0.88rem;color:#666;font-weight:600; }
+@media (max-width:600px) { .rooms-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+{% block content %}
+<a href="{% url 'sessions_list' %}" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Sessions
+</a>
+
+<div class="page-header">
+    <h1>{{ session.name }}</h1>
+    <p>{{ session.academic_year }} - {{ session.program }}</p>
+</div>
+
+<div class="session-info">
+    <div class="info-item">Program: <strong>{{ session.program }}</strong></div>
+    <div class="info-item">Academic Year: <strong>{{ session.academic_year }}</strong></div>
+    <div class="info-item">Total Students: <strong>{{ session.students.count }}</strong></div>
+    <div class="info-item">Room 1: <strong>{{ room1_count }}</strong></div>
+    <div class="info-item">Room 2: <strong>{{ room2_count }}</strong></div>
+</div>
+
+<div class="rooms-grid">
+    <a href="{% url 'room_students' session.id 1 %}" class="room-block">
+        <div class="room-header">
+            <div class="room-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                </svg>
+            </div>
+            <h2>AIMS Room 1</h2>
+        </div>
+        <div class="room-body">
+            <div class="room-stat"><span class="label">Scheduled students</span><span class="val">{{ room1_count }}</span></div>
+            <div class="room-stat"><span class="label">Pending</span><span class="val">{{ room1_pending }}</span></div>
+            <div class="room-stat"><span class="label">Ongoing</span><span class="val">{{ room1_ongoing }}</span></div>
+            <div class="room-stat"><span class="label">Done</span><span class="val">{{ room1_done }}</span></div>
+        </div>
+        <div class="room-cta">
+            View Students
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+    </a>
+
+    <a href="{% url 'room_students' session.id 2 %}" class="room-block">
+        <div class="room-header">
+            <div class="room-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                </svg>
+            </div>
+            <h2>AIMS Room 2</h2>
+        </div>
+        <div class="room-body">
+            <div class="room-stat"><span class="label">Scheduled students</span><span class="val">{{ room2_count }}</span></div>
+            <div class="room-stat"><span class="label">Pending</span><span class="val">{{ room2_pending }}</span></div>
+            <div class="room-stat"><span class="label">Ongoing</span><span class="val">{{ room2_ongoing }}</span></div>
+            <div class="room-stat"><span class="label">Done</span><span class="val">{{ room2_done }}</span></div>
+        </div>
+        <div class="room-cta">
+            View Students
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+    </a>
+</div>
+
+<div class="download-bar">
+    <span>Download all PVs:</span>
+    <a href="{% url 'download_all_pv' session.id 'docx' %}" class="btn btn-outline btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        ZIP (Word)
+    </a>
+    <a href="{% url 'download_all_pv' session.id 'pdf' %}" class="btn btn-outline btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        ZIP (PDF)
+    </a>
+</div>
+{% endblock %}

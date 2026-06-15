@@ -1,0 +1,211 @@
+{% extends "defense/base.html" %}
+{% block title %}Room {{ room_number }} - {{ session.name }}{% endblock %}
+{% block extra_css %}
+<style>
+.back-link { display:inline-flex;align-items:center;gap:6px;color:var(--aims-red);text-decoration:none;font-size:0.9rem;margin-bottom:1.5rem;font-weight:500; }
+.back-link:hover { text-decoration:underline; }
+.room-badge { display:inline-flex;align-items:center;gap:8px;background:var(--aims-red);color:white;padding:0.4rem 1rem;border-radius:20px;font-size:0.85rem;font-weight:700;margin-bottom:1rem; }
+.table-card { background:white;border-radius:14px;box-shadow:var(--shadow);overflow:hidden; }
+.table-toolbar { padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--gray-200); }
+.search-box { display:flex;align-items:center;background:var(--gray-100);border-radius:8px;padding:0.4rem 0.8rem;gap:6px; }
+.search-box input { border:none;background:transparent;outline:none;font-size:0.9rem;width:180px; }
+.filter-row { display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;padding:0.8rem 1.5rem;background:var(--gray-100); }
+.filter-row label { font-size:0.82rem;font-weight:600;color:#555; }
+.filter-row select { width:auto;padding:0.3rem 0.6rem;font-size:0.82rem; }
+
+/* Action button styles */
+.start-btn { display:inline-flex;align-items:center;gap:4px;padding:0.35rem 0.9rem;background:var(--aims-red);color:white;border-radius:6px;font-size:0.8rem;font-weight:600;text-decoration:none;transition:background 0.2s;white-space:nowrap; }
+.start-btn:hover { background:var(--aims-dark);color:white; }
+.start-btn.disabled { background:var(--gray-200);color:#999;pointer-events:none; }
+.start-btn.started  { background:#1565c0;cursor:default;pointer-events:none; }
+.link-btn { display:inline-flex;align-items:center;gap:4px;padding:0.35rem 0.9rem;background:#1565c0;color:white;border-radius:6px;font-size:0.8rem;font-weight:600;text-decoration:none;white-space:nowrap; }
+.link-btn:hover { background:#0d47a1;color:white; }
+.copy-btn { display:inline-flex;align-items:center;gap:4px;padding:0.3rem 0.7rem;background:#e3f2fd;color:#1565c0;border-radius:6px;font-size:0.78rem;font-weight:600;border:none;cursor:pointer;white-space:nowrap; }
+.copy-btn:hover { background:#bbdefb; }
+.end-btn { display:inline-flex;align-items:center;gap:4px;padding:0.35rem 0.9rem;background:#e65100;color:white;border-radius:6px;font-size:0.8rem;font-weight:600;text-decoration:none;white-space:nowrap; }
+.end-btn:hover { background:#bf360c;color:white; }
+.pv-btn { display:inline-flex;align-items:center;gap:4px;padding:0.35rem 0.8rem;background:white;color:var(--aims-red);border:1.5px solid var(--aims-red);border-radius:6px;font-size:0.78rem;font-weight:600;text-decoration:none;white-space:nowrap; }
+.pv-btn:hover { background:var(--aims-light); }
+
+/* Room public link bar */
+.room-link-bar {
+    background: #e3f2fd; border-left: 4px solid #1565c0;
+    border-radius: 0 10px 10px 0;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.room-link-bar .rl-label { font-size: 0.85rem; font-weight: 700; color: #1565c0; white-space: nowrap; }
+.room-link-bar .rl-url { font-size: 0.78rem; color: #555; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-link-bar .rl-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.gen-btn { display:inline-flex;align-items:center;gap:5px;padding:0.4rem 1rem;background:#1565c0;color:white;border-radius:6px;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;text-decoration:none; }
+.gen-btn:hover { background:#0d47a1;color:white; }
+
+tbody tr.done-row    { background:#e8f5e9 !important; }
+tbody tr.ongoing-row { background:#e3f2fd !important; }
+.actions-cell { display:flex;gap:5px;align-items:center;flex-wrap:wrap; }
+</style>
+{% endblock %}
+{% block content %}
+
+<a href="{% url 'session_rooms' session.id %}" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Rooms
+</a>
+
+<div class="room-badge">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    AIMS Room {{ room_number }}
+</div>
+
+<div class="page-header" style="margin-bottom:1rem;">
+    <h1>{{ session.name }}</h1>
+    <p>{{ students.count }} student{{ students.count|pluralize }} scheduled in Room {{ room_number }}</p>
+</div>
+
+{# ── Room-level public link (fixed URL, always available) ─────────────────── #}
+{% with pub_url=request.scheme|add:"://"|add:request.get_host|add:"/sessions/"|add:session.id|stringformat:"d"|add:"/room/"|add:room_number|stringformat:"d"|add:"/public/" %}
+<div class="room-link-bar">
+    <span class="rl-label">📡 Room Public Link</span>
+    <span class="rl-url" id="roomLinkUrl">{{ pub_url }}</span>
+    <div class="rl-actions">
+        <button class="copy-btn" onclick="copyText('{{ pub_url }}')">📋 Copy</button>
+        <a href="{{ pub_url }}" target="_blank" class="gen-btn" style="background:#2e7d32;">👁 View</a>
+    </div>
+</div>
+{% endwith %}
+
+<div class="table-card">
+    <div class="table-toolbar">
+        <h3>Defense Schedule</h3>
+        <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="searchInput" placeholder="Search student...">
+        </div>
+    </div>
+    <div class="filter-row">
+        <label>Status:</label>
+        <select id="statusFilter" onchange="filterTable()">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="done">Done</option>
+        </select>
+        <label style="margin-left:1rem;">Date:</label>
+        <select id="dateFilter" onchange="filterTable()">
+            <option value="">All</option>
+            {% for student in students %}
+            {% if student.defense_date %}
+            <option value="{{ student.defense_date }}">{{ student.defense_date }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+    <div class="table-wrap">
+        <table id="studentsTable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Student</th>
+                    <th>Thesis Title</th>
+                    <th>Supervisor</th>
+                    <th>Jury President</th>
+                    <th>Date</th>
+                    <th>Defence</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for student in students %}
+            <tr class="{% if student.defense_status == 'done' %}done-row{% elif student.defense_status == 'ongoing' %}ongoing-row{% endif %}"
+                data-status="{{ student.defense_status }}"
+                data-date="{{ student.defense_date }}"
+                data-name="{{ student.full_name|lower }}">
+                <td><strong>{{ student.time }}</strong></td>
+                <td>
+                    <div style="font-weight:600;color:#222;">{{ student.full_name }}</div>
+                </td>
+                <td style="max-width:260px;font-size:0.82rem;color:#555;">
+                    <div style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ student.thesis_title }}</div>
+                </td>
+                <td style="font-size:0.85rem;">{{ student.supervisor_1_name }}</td>
+                <td style="font-size:0.85rem;">{{ student.jury_president_name }}</td>
+                <td style="font-size:0.85rem;white-space:nowrap;">{{ student.defense_date }}</td>
+                <td>
+                    <span class="badge badge-{{ student.defense_status }}">
+                        {% if student.defense_status == 'pending' %}Pending
+                        {% elif student.defense_status == 'ongoing' %}Ongoing
+                        {% else %}Done{% endif %}
+                    </span>
+                </td>
+                <td>
+                    <div class="actions-cell">
+                        {% if student.defense_status == 'pending' %}
+                            <a href="{% url 'start_defense' student.id %}"
+                               class="start-btn"
+                               onclick="return confirm('Start defense for {{ student.full_name }}?')">
+                                ▶ Start
+                            </a>
+
+                        {% elif student.defense_status == 'ongoing' %}
+                            <span class="start-btn started">▶ Started</span>
+                            <a href="{% url 'defense_entry' student.start_link_token %}"
+                               class="link-btn" target="_blank">🔗 Link</a>
+                            <button class="copy-btn"
+                               onclick="copyText('{{ request.scheme }}://{{ request.get_host }}{% url 'defense_entry' student.start_link_token %}')">
+                               📋 Copy
+                            </button>
+                            <a href="{% url 'end_defense' student.id %}"
+                               class="end-btn"
+                               onclick="return confirm('End this defense? This cannot be undone without admin.')">
+                               ■ Done
+                            </a>
+
+                        {% else %}
+                            <span class="start-btn disabled">✓ Done</span>
+                            <a href="{% url 'pv_overview' student.id %}" class="pv-btn">📄 PV</a>
+                            <a href="{% url 'student_detail' student.id %}" class="pv-btn">🔍 Detail</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align:center;padding:2rem;color:#999;">
+                    No students in this room. Import an Excel file from the session page.
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('input', filterTable);
+
+function filterTable() {
+    const q      = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+    const date   = document.getElementById('dateFilter').value;
+    document.querySelectorAll('#studentsTable tbody tr').forEach(row => {
+        const matchQ = !q      || (row.dataset.name   || '').includes(q);
+        const matchS = !status || row.dataset.status === status;
+        const matchD = !date   || row.dataset.date   === date;
+        row.style.display = (matchQ && matchS && matchD) ? '' : 'none';
+    });
+}
+
+function copyText(url) {
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied!')).catch(() => prompt('Copy:', url));
+}
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#333;color:white;padding:0.7rem 1.5rem;border-radius:8px;font-size:0.9rem;z-index:9999;';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+}
+</script>
+{% endblock %}

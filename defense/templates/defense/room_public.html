@@ -1,0 +1,118 @@
+{% extends "defense/base.html" %}
+{% block title %}AIMS Room {{ room_number }} - Live Defenses{% endblock %}
+{% block extra_css %}
+<style>
+.room-public-header {
+    background: var(--aims-red); color: white;
+    border-radius: 14px; padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    display: flex; align-items: center; gap: 1rem;
+}
+.room-public-header h1 { font-size: 1.4rem; }
+.room-public-header p  { opacity: 0.8; font-size: 0.88rem; margin-top: 0.2rem; }
+.live-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #4caf50;
+    box-shadow: 0 0 0 0 rgba(76,175,80,0.6);
+    animation: livePulse 1.5s infinite;
+    flex-shrink: 0;
+}
+@keyframes livePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(76,175,80,0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(76,175,80,0); }
+    100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
+}
+.defense-cards { display: flex; flex-direction: column; gap: 1.2rem; }
+.defense-card {
+    background: white; border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden;
+    border-left: 5px solid var(--aims-red);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.defense-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.defense-card-body { padding: 1.4rem 1.6rem; }
+.defense-card h3 { font-size: 1.05rem; color: #222; margin-bottom: 0.3rem; }
+.defense-card .thesis { font-size: 0.88rem; color: #555; margin-bottom: 1rem; font-style: italic; }
+.defense-card .meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem; }
+.meta-chip {
+    background: var(--gray-100); border-radius: 20px;
+    padding: 0.2rem 0.8rem; font-size: 0.78rem; color: #555;
+    display: flex; align-items: center; gap: 4px;
+}
+.enter-card-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 0.65rem 1.5rem;
+    background: var(--aims-red); color: white;
+    border-radius: 8px; text-decoration: none;
+    font-size: 0.9rem; font-weight: 700;
+    transition: background 0.2s;
+}
+.enter-card-btn:hover { background: var(--aims-dark); color: white; }
+.empty-state { text-align: center; padding: 4rem 2rem; color: #999; }
+.empty-state svg { opacity: 0.3; margin-bottom: 1rem; }
+.refresh-note { text-align: center; font-size: 0.78rem; color: #aaa; margin-top: 2rem; }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="room-public-header">
+    <div class="live-dot"></div>
+    <div>
+        <h1>AIMS Room {{ room_number }} - Live Defenses</h1>
+        <p>{{ session.name }} &bull; {{ session.academic_year }}</p>
+    </div>
+</div>
+
+{% if students %}
+<div class="defense-cards">
+    {% for student in students %}
+    <div class="defense-card">
+        <div class="defense-card-body">
+            <h3>{{ student.full_name }}</h3>
+            <div class="thesis">{{ student.thesis_title }}</div>
+            <div class="meta">
+                {% if student.time %}
+                <div class="meta-chip">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {{ student.time }}
+                </div>
+                {% endif %}
+                {% if student.supervisor_1_name %}
+                <div class="meta-chip">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    {{ student.supervisor_1_name }}
+                </div>
+                {% endif %}
+                <div class="meta-chip" style="background:#e8f5e9;color:#2e7d32;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                    Ongoing
+                </div>
+            </div>
+            <a href="{% url 'defense_entry' student.start_link_token %}" class="enter-card-btn">
+                Enter Evaluation
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <p>No active defense sessions right now in Room {{ room_number }}.</p>
+    <p style="font-size:0.82rem;margin-top:0.5rem;">This page will show defenses once they are started.</p>
+</div>
+{% endif %}
+
+<p class="refresh-note">
+    This page refreshes automatically every 30 seconds.
+    <a href="javascript:location.reload()" style="color:var(--aims-red);">Refresh now</a>
+</p>
+
+<script>
+// Auto-refresh every 30 seconds
+setTimeout(() => location.reload(), 30000);
+</script>
+{% endblock %}

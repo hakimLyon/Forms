@@ -1,0 +1,20 @@
+{% extends "defense/base.html" %}
+{% block title %}Session Closed{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:4rem 2rem;">
+    <div style="width:80px;height:80px;background:#fff3e0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e65100" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+    </div>
+    <h2 style="color:var(--aims-red);">Defense Session {% if student.defense_status == 'done' %}Closed{% else %}Not Started{% endif %}</h2>
+    <p style="color:#666;margin-top:0.8rem;">
+        {% if student.defense_status == 'done' %}
+        The evaluation session for <strong>{{ student.full_name }}</strong> has ended.
+        {% else %}
+        This evaluation link is not currently active.
+        {% endif %}
+    </p>
+    <p style="color:#999;font-size:0.85rem;margin-top:0.5rem;">Please contact the session coordinator for assistance.</p>
+</div>
+{% endblock %}

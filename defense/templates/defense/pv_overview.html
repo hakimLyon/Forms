@@ -1,0 +1,136 @@
+{% extends "defense/base.html" %}
+{% block title %}PV - {{ student.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+.back-link { display:inline-flex;align-items:center;gap:6px;color:var(--aims-red);text-decoration:none;font-size:0.9rem;margin-bottom:1.5rem;font-weight:500; }
+.back-link:hover { text-decoration:underline; }
+.pv-header { background: var(--aims-red); color: white; border-radius: 14px; padding: 2rem; margin-bottom: 2rem; }
+.pv-header h2 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+.pv-header .meta { opacity: 0.8; font-size: 0.88rem; margin-top: 0.3rem; }
+.section-title { font-size: 1rem; font-weight: 700; color: var(--aims-red); margin: 1.5rem 0 1rem; text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem; }
+.score-table table { width: 100%; }
+.final-box {
+    background: var(--aims-light);
+    border: 2px solid var(--aims-red);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    margin: 1.5rem 0;
+}
+.final-formula { font-size: 0.85rem; color: #555; }
+.final-formula strong { color: var(--aims-red); }
+.final-score { text-align: right; }
+.final-score .num { font-size: 2.5rem; font-weight: 800; color: var(--aims-red); line-height: 1; }
+.final-score .pct { font-size: 1rem; color: #888; }
+.final-score .grade { font-size: 1rem; font-weight: 700; color: var(--green); margin-top: 0.3rem; }
+.grade-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.grade-table td { padding: 0.5rem 1rem; border-bottom: 1px solid var(--gray-200); }
+.grade-table tr:last-child td { border-bottom: none; }
+.grade-table td:first-child { font-weight: 600; }
+.download-section { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-top: 2rem; }
+.download-section .label { font-weight: 600; font-size: 0.88rem; color: #555; }
+.no-evals { text-align: center; padding: 2rem; color: #999; }
+.committee-sig { text-align: right; margin-top: 1.5rem; font-size: 0.9rem; color: #555; border-top: 1px solid var(--gray-200); padding-top: 1rem; }
+.committee-sig strong { display: block; color: #222; }
+</style>
+{% endblock %}
+{% block content %}
+<a href="{% url 'room_students' student.session.id student.room %}" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Room {{ student.room }}
+</a>
+
+<div class="pv-header">
+    <h2>THESIS DEFENSE REPORT (PV)</h2>
+    <div class="meta">
+        <strong>{{ student.full_name }}</strong> &bull;
+        Defense: {{ student.defense_date }} &bull;
+        Room {{ student.room }} &bull;
+        {{ student.time }}
+    </div>
+    <div class="meta" style="margin-top:0.5rem;">{{ student.thesis_title }}</div>
+</div>
+
+{% if not evaluations %}
+<div class="card no-evals">
+    <p>No evaluations submitted yet for this student.</p>
+</div>
+{% else %}
+
+<div class="card">
+    <div class="section-title">Committee Evaluations</div>
+    <div class="table-wrap score-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Score (/50)</th>
+                    <th>Percentage</th>
+                    <th>Decision</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for ev in evaluations %}
+            <tr>
+                <td><strong>{{ ev.evaluator_name }}</strong></td>
+                <td>{{ ev.get_role_display }}</td>
+                <td>{{ ev.total_score_raw }}/50</td>
+                <td>{{ ev.total_score_percent|floatformat:1 }}%</td>
+                <td><span class="badge badge-{% if ev.total_score_percent >= 85 %}done{% elif ev.total_score_percent >= 60 %}ongoing{% else %}pending{% endif %}">{{ ev.grade_label }}</span></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="final-box">
+    <div class="final-formula">
+        <div><strong>Final Grade Formula</strong></div>
+        <div style="margin-top:0.5rem;">
+            = 40% × Supervisor avg (<strong>{{ sup_avg }}%</strong>) + 60% × Examiners avg (<strong>{{ exam_avg }}%</strong>)
+        </div>
+        <div style="margin-top:0.3rem;font-size:0.78rem;color:#888;">
+            = 0.4 × {{ sup_avg }} + 0.6 × {{ exam_avg }}
+        </div>
+    </div>
+    <div class="final-score">
+        <div class="num">{{ final_score }}<span style="font-size:1.2rem;color:#888;">%</span></div>
+        <div class="grade">{{ final_grade }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-title">Grade Categories</div>
+    <table class="grade-table">
+        <tr><td>Fail</td><td>0 – 59%</td></tr>
+        <tr><td>Pass</td><td>60 – 69%</td></tr>
+        <tr><td>Good Pass</td><td>70 – 79%</td></tr>
+        <tr><td>Very Good Pass</td><td>80 – 85%</td></tr>
+        <tr><td>Distinction</td><td>85%+</td></tr>
+    </table>
+    <div class="committee-sig">
+        <strong>Dr. Coura Balde</strong>
+        Academic Manager, AIMS Senegal
+    </div>
+</div>
+
+{% endif %}
+
+<div class="download-section">
+    <span class="label">Download PV:</span>
+    <a href="{% url 'download_pv' student.id 'docx' %}" class="btn btn-outline">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Word (.docx)
+    </a>
+    <a href="{% url 'download_pv' student.id 'pdf' %}" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        PDF
+    </a>
+    <a href="{% url 'download_all_pv' student.session.id 'docx' %}" class="btn btn-outline">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        All PVs (ZIP)
+    </a>
+</div>
+{% endblock %}

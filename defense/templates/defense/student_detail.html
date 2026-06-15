@@ -1,0 +1,109 @@
+{% extends "defense/base.html" %}
+{% block title %}Detail - {{ student.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+.back-link { display:inline-flex;align-items:center;gap:6px;color:var(--aims-red);text-decoration:none;font-size:0.9rem;margin-bottom:1.5rem;font-weight:500; }
+.back-link:hover { text-decoration:underline; }
+.detail-header {
+    background: var(--aims-red); color: white;
+    border-radius: 14px; padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+}
+.detail-header h2 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+.detail-header .meta { opacity: 0.85; font-size: 0.88rem; margin-top: 0.3rem; }
+
+.eval-block { background: white; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 1.5rem; overflow: hidden; }
+.eval-block-header {
+    background: var(--aims-light); padding: 1rem 1.5rem;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+}
+.eval-block-header h3 { color: var(--aims-red); font-size: 1rem; }
+.eval-block-header .role-pill {
+    display: inline-block; padding: 0.2rem 0.7rem; border-radius: 16px;
+    font-size: 0.75rem; font-weight: 700;
+}
+.role-pill.supervisor { background: #e3f2fd; color: #1565c0; }
+.role-pill.president  { background: #fff3e0; color: #e65100; }
+.role-pill.examiner   { background: #fce4ec; color: #c62828; }
+
+.detail-table { width: 100%; border-collapse: collapse; }
+.detail-table td { padding: 0.6rem 1.5rem; font-size: 0.85rem; border-bottom: 1px solid var(--gray-200); vertical-align: top; }
+.detail-table tr:last-child td { border-bottom: none; }
+.detail-table td.label { font-weight: 600; color: #555; width: 45%; }
+.detail-table td.value { color: #222; }
+.detail-table tr.highlight td { background: var(--aims-light); font-weight: 700; }
+
+.final-summary {
+    background: var(--aims-red); color: white;
+    border-radius: 14px; padding: 1.5rem 2rem; margin-top: 1.5rem;
+    text-align: center;
+}
+.final-summary .fs-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+.final-summary .fs-score { font-size: 2.4rem; font-weight: 800; margin: 0.3rem 0; }
+.final-summary .fs-grade {
+    display: inline-block; background: rgba(255,255,255,0.2);
+    padding: 0.3rem 1.2rem; border-radius: 20px;
+    font-weight: 700; font-size: 0.95rem;
+}
+.download-bar { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.empty-state { text-align: center; padding: 3rem; color: #999; }
+</style>
+{% endblock %}
+{% block content %}
+<a href="{% url 'room_students' student.session.id student.room %}" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Room {{ student.room }}
+</a>
+
+<div class="detail-header">
+    <h2>Evaluation Detail</h2>
+    <div class="meta">
+        <strong>{{ student.full_name }}</strong> &bull;
+        Defense: {{ student.defense_date }} &bull;
+        Room {{ student.room }} &bull; {{ student.time }}
+    </div>
+    <div class="meta" style="margin-top:0.5rem;">{{ student.thesis_title }}</div>
+</div>
+
+{% if not eval_blocks %}
+<div class="eval-block">
+    <div class="empty-state">No evaluations have been submitted yet for this student.</div>
+</div>
+{% else %}
+{% for block in eval_blocks %}
+<div class="eval-block">
+    <div class="eval-block-header">
+        <h3>{{ block.evaluation.evaluator_name }}</h3>
+        <span class="role-pill {{ block.evaluation.role }}">{{ block.evaluation.get_role_display }}</span>
+    </div>
+    <table class="detail-table">
+        {% for label, value in block.rows %}
+        <tr {% if 'Total' in label or label == 'Grade' or 'Subtotal' in label %}class="highlight"{% endif %}>
+            <td class="label">{{ label }}</td>
+            <td class="value">{{ value|linebreaksbr }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endfor %}
+
+{% if final_grade_info %}
+<div class="final-summary">
+    <div class="fs-label">Student's Final Grade</div>
+    <div class="fs-score">{{ final_grade_info.final_score }}%</div>
+    <div class="fs-grade">{{ final_grade_info.final_label }}</div>
+    <div style="font-size:0.78rem;opacity:0.75;margin-top:0.8rem;">This will count on the Final Marks</div>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="download-bar">
+    <a href="{% url 'download_detail_pdf' student.id %}" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Download Detail (PDF)
+    </a>
+    <a href="{% url 'pv_overview' student.id %}" class="btn btn-outline">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        View PV Summary
+    </a>
+</div>
+{% endblock %}

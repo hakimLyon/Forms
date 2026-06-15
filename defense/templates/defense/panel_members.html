@@ -1,0 +1,145 @@
+{% extends "defense/base.html" %}
+{% block title %}Panel Members - {{ student.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+.student-strip {
+    background: var(--aims-red); color: white;
+    border-radius: 10px; padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem; font-size: 0.9rem;
+    display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center;
+}
+.student-strip strong { display: block; font-size: 1rem; }
+
+.panel-header { text-align: center; margin-bottom: 2rem; }
+.panel-header h2 { color: var(--aims-red); font-size: 1.4rem; }
+.panel-header p  { color: #666; font-size: 0.9rem; margin-top: 0.3rem; }
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+@media (max-width: 700px) { .panel-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 420px) { .panel-grid { grid-template-columns: 1fr 1fr; } }
+
+.member-block {
+    background: white; border-radius: 12px; box-shadow: var(--shadow);
+    padding: 1.5rem 1rem; text-align: center;
+    cursor: pointer; text-decoration: none; color: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 0.8rem;
+    border: 2px solid transparent; transition: all 0.2s; position: relative;
+}
+.member-block:hover { border-color: var(--aims-red); transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.member-block.submitted { border-color: var(--green); background: #f1f8f2; }
+
+.role-icon { width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem; }
+.role-supervisor .role-icon { background:#e3f2fd; }
+.role-president  .role-icon { background:#fff3e0; }
+.role-examiner   .role-icon { background:#fce4ec; }
+
+.role-label { font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:0.2rem 0.7rem;border-radius:20px; }
+.role-supervisor .role-label { background:#e3f2fd;color:#1565c0; }
+.role-president  .role-label { background:#fff3e0;color:#e65100; }
+.role-examiner   .role-label { background:#fce4ec;color:#c62828; }
+
+.member-name  { font-size:0.88rem;font-weight:700;color:#222;line-height:1.3; }
+.member-email { font-size:0.75rem;color:#888; }
+.submitted-badge { position:absolute;top:8px;right:8px;background:var(--green);color:white;font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:20px; }
+
+/* Progress bar */
+.eval-progress { margin: 1.5rem 0; }
+.eval-progress .bar-wrap { background: var(--gray-200); border-radius: 20px; height: 8px; overflow: hidden; }
+.eval-progress .bar-fill { background: var(--aims-red); height: 100%; border-radius: 20px; transition: width 0.4s; }
+.eval-progress .bar-label { font-size: 0.82rem; color: #666; margin-bottom: 0.4rem; }
+
+/* End defense section */
+.end-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px dashed var(--gray-200);
+    text-align: center;
+}
+.end-section p { color: #666; font-size: 0.88rem; margin-bottom: 1rem; }
+.end-defense-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 0.9rem 2.5rem;
+    background: #c62828; color: white;
+    border-radius: 50px; border: none;
+    font-size: 1rem; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 4px 16px rgba(198,40,40,0.25);
+    transition: all 0.2s;
+}
+.end-defense-btn:hover { background: #b71c1c; transform: translateY(-2px); color: white; }
+.not-starter-note { color: #aaa; font-size: 0.82rem; font-style: italic; }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="student-strip">
+    <div>
+        <strong>{{ student.full_name }}</strong>
+        {{ student.thesis_title|truncatechars:90 }}
+    </div>
+    <div style="margin-left:auto;opacity:0.8;font-size:0.82rem;">
+        Room {{ student.room }} &bull; {{ student.time }}
+    </div>
+</div>
+
+<div class="panel-header">
+    <h2>Evaluation Panel</h2>
+    <p>Click your block to open the evaluation form</p>
+</div>
+
+{% with total=members|length done=submitted_names|length %}
+{% if total > 0 %}
+<div class="eval-progress">
+    <div class="bar-label">{{ done }} / {{ total }} evaluations submitted</div>
+    <div class="bar-wrap">
+        <div class="bar-fill" style="width:{% widthratio done total 100 %}%"></div>
+    </div>
+</div>
+{% endif %}
+{% endwith %}
+
+<div class="panel-grid">
+    {% for member in members %}
+    <a href="{% url 'evaluation_form' token forloop.counter0 %}"
+       class="member-block role-{{ member.role }}{% if member.name in submitted_names %} submitted{% endif %}">
+        {% if member.name in submitted_names %}
+        <div class="submitted-badge">✓ Done</div>
+        {% endif %}
+        <div class="role-icon">
+            {% if member.role == 'supervisor' %}👨‍🏫
+            {% elif member.role == 'president' %}⚖️
+            {% else %}🔬{% endif %}
+        </div>
+        <div class="role-label">{{ member.label }}</div>
+        <div class="member-name">{{ member.name }}</div>
+        {% if member.email %}<div class="member-email">{{ member.email }}</div>{% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+<p style="text-align:center;color:#888;font-size:0.82rem;margin-top:1.2rem;">
+    Each evaluator clicks their own block &bull; Submissions are independent
+</p>
+
+{# ── End Defense button - only for the person who started ─── #}
+<div class="end-section">
+    {% if can_end %}
+    <p>Once all evaluations are done, click below to close this defense session.</p>
+    <a href="{% url 'end_defense_from_panel' token %}"
+       class="end-defense-btn"
+       onclick="return confirm('End the defense evaluation for {{ student.full_name }}?\n\nThis will close access for all evaluators and mark the defense as Done.')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+        </svg>
+        End Defense Evaluation
+    </a>
+    {% else %}
+    <p class="not-starter-note">Only the coordinator who started this defense can end the evaluation session.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

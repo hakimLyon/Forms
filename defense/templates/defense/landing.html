@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIMS Senegal — Thesis Defense Portal</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #6B0B1F;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        /* Animated background circles */
+        .bg-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.03);
+            animation: pulse 6s ease-in-out infinite;
+        }
+        .bg-circle:nth-child(1) { width: 600px; height: 600px; top: -200px; left: -200px; animation-delay: 0s; }
+        .bg-circle:nth-child(2) { width: 400px; height: 400px; bottom: -100px; right: -100px; animation-delay: 2s; }
+        .bg-circle:nth-child(3) { width: 300px; height: 300px; top: 50%; right: 10%; animation-delay: 4s; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* Center content */
+        .center-content {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            animation: fadeUp 0.8s ease-out forwards;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .aims-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 2px;
+            margin-bottom: 0.3rem;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+        .aims-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+        }
+        .aims-tagline {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.55);
+            margin-bottom: 3rem;
+            font-style: italic;
+        }
+
+        /* Big logo in center */
+        .main-logo {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.25);
+            box-shadow: 0 16px 64px rgba(0,0,0,0.4), 0 0 0 16px rgba(255,255,255,0.04);
+            object-fit: cover;
+            background: white;
+            margin-bottom: 2.5rem;
+            animation: rotateBorder 8s linear infinite;
+        }
+        @keyframes rotateBorder {
+            0%, 100% { box-shadow: 0 16px 64px rgba(0,0,0,0.4), 0 0 0 16px rgba(255,255,255,0.04), 0 0 60px rgba(201,168,76,0.15); }
+            50% { box-shadow: 0 16px 64px rgba(0,0,0,0.4), 0 0 0 16px rgba(255,255,255,0.08), 0 0 80px rgba(201,168,76,0.3); }
+        }
+
+        .enter-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 1rem 2.5rem;
+            background: white;
+            color: #6B0B1F;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: all 0.25s;
+            border: none;
+            cursor: pointer;
+        }
+        .enter-btn:hover {
+            background: #fdf0f3;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        .enter-btn svg { width: 20px; height: 20px; }
+
+        .year-badge {
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            animation: drift linear infinite;
+        }
+        @keyframes drift {
+            from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            to { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+
+    <!-- Floating particles -->
+    <script>
+        for(let i=0;i<18;i++){
+            const p = document.createElement('div');
+            p.className='particle';
+            p.style.left = Math.random()*100+'%';
+            p.style.animationDuration = (6+Math.random()*10)+'s';
+            p.style.animationDelay = (Math.random()*8)+'s';
+            p.style.width = p.style.height = (2+Math.random()*5)+'px';
+            document.body.appendChild(p);
+        }
+    </script>
+
+    <!-- Center content -->
+    <div class="center-content">
+        <img src="{% static 'defense/img/aims-logo.jpg' %}" alt="AIMS Logo" class="main-logo">
+        <div class="aims-title">AIMS Senegal</div>
+        <div class="aims-subtitle">Thesis Defense Portal</div>
+        <div class="aims-tagline">African Institute for Mathematical Sciences</div>
+        <a href="{% url 'password_gate' %}" class="enter-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+            </svg>
+            Enter Platform
+        </a>
+        <div class="year-badge">Defense Sessions</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,312 @@
+{% extends "defense/base.html" %}
+{% load defense_tags %}
+{% block title %}Evaluation Form - {{ student.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+.eval-form-wrap { max-width: 760px; margin: 0 auto; }
+.form-hero {
+    background: var(--aims-red); color: white;
+    border-radius: 14px; padding: 1.8rem 2rem; margin-bottom: 2rem;
+}
+.form-hero h2 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+.form-hero p { opacity: 0.8; font-size: 0.88rem; }
+.role-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px; padding: 0.3rem 1rem;
+    font-size: 0.82rem; font-weight: 700; margin-top: 0.8rem;
+}
+.score-section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.2rem; box-shadow: var(--shadow); }
+.score-section h4 { color: var(--aims-red); font-size: 0.95rem; margin-bottom: 0.4rem; font-weight: 700; }
+.score-section .qdesc { font-size: 0.85rem; color: #555; margin-bottom: 1rem; line-height: 1.5; }
+.max-note { font-size: 0.78rem; color: #999; font-style: italic; margin-top: 0.5rem; }
+.submit-section { text-align: center; margin-top: 2rem; }
+.submit-btn {
+    padding: 1rem 3rem;
+    background: var(--aims-red); color: white;
+    border: none; border-radius: 50px;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 6px 24px rgba(107,11,31,0.3);
+}
+.submit-btn:hover { background: var(--aims-dark); transform: translateY(-2px); }
+.radio-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+.radio-opt input[type=radio] { display: none; }
+.radio-opt label {
+    padding: 0.5rem 1.2rem; border: 2px solid var(--gray-200);
+    border-radius: 8px; cursor: pointer;
+    font-size: 0.9rem; font-weight: 600; transition: all 0.15s; color: #555;
+}
+.radio-opt input:checked + label { background: var(--aims-red); color: white; border-color: var(--aims-red); }
+.radio-opt label:hover { border-color: var(--aims-red); color: var(--aims-red); }
+
+/* Live running-total box */
+.live-total-box {
+    background: white;
+    border: 2px solid var(--aims-red);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: sticky;
+    top: 0.5rem;
+    z-index: 10;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+}
+.live-total-box .lt-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--aims-red);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.live-total-box .lt-breakdown {
+    font-size: 0.78rem;
+    color: #888;
+}
+.live-total-box .lt-score {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--aims-red);
+    white-space: nowrap;
+}
+.live-total-box .lt-score small {
+    font-size: 0.95rem;
+    color: #999;
+    font-weight: 500;
+}
+.presentation-block-wrap {
+    background: white; border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.2rem; box-shadow: var(--shadow);
+}
+.presentation-block-wrap h4 {
+    color: var(--aims-red); font-size: 0.95rem; margin-bottom: 1rem; font-weight: 700;
+}
+.presentation-item { margin-bottom: 1.2rem; }
+.presentation-item:last-child { margin-bottom: 0; }
+.presentation-item .pi-label { font-size: 0.88rem; font-weight: 600; color: #333; margin-bottom: 0.5rem; }
+.presentation-item .score-grid { gap: 6px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="eval-form-wrap">
+    <div class="form-hero">
+        <h2>Thesis Evaluation Form</h2>
+        <p>{{ student.thesis_title|truncatechars:100 }}</p>
+        <div class="role-chip">
+            {% if member.role == 'supervisor' %}Supervisor
+            {% elif member.role == 'president' %}Jury President
+            {% else %}Examiner{% endif %}
+            &bull; {{ member.name }}
+        </div>
+    </div>
+
+    {% if existing %}
+    <div class="alert alert-info">You already submitted. Submitting again will update your response.</div>
+    {% endif %}
+
+    <div class="live-total-box">
+        <div>
+            <div class="lt-label">Live Total Score</div>
+            <div class="lt-breakdown" id="liveBreakdown">0/{{ form_max }}</div>
+        </div>
+        <div class="lt-score">
+            <span id="liveTotal">0</span><small id="liveMax">/{{ form_max }}</small>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="evalForm">
+        {% csrf_token %}
+
+        <div class="card">
+            <div class="form-group">
+                <label>Adresse e-mail <span class="req">*</span></label>
+                <input type="email" name="email" required value="{{ existing.evaluator_email|default:member.email }}">
+            </div>
+            <div class="form-group">
+                <label>Title/Full name of the Supervisor/Examiner <span class="req">*</span></label>
+                <input type="text" name="evaluator_name" required value="{{ existing.evaluator_name|default:member.name }}">
+            </div>
+            <div class="form-group">
+                <label>Student full name <span class="req">*</span></label>
+                <input type="text" name="student_full_name" required value="{{ existing.student_full_name|default:student.full_name }}">
+            </div>
+            <div class="form-group">
+                <label>Title of your student's project <span class="req">*</span></label>
+                <textarea name="thesis_title" rows="3" required>{{ existing.thesis_title_confirmed|default:student.thesis_title }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>You are <span class="req">*</span></label>
+                <div class="radio-group">
+                    {% for val, label in evaluation_roles %}
+                    <div class="radio-opt">
+                        <input type="radio" name="you_are" id="role_{{ val }}" value="{{ val }}"
+                            {% if existing.role == val %}checked{% elif not existing and member.role == val %}checked{% endif %}>
+                        <label for="role_{{ val }}">{{ label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Any research paper coming out from the project? <span class="req">*</span></label>
+                <div class="radio-group">
+                    <div class="radio-opt">
+                        <input type="radio" name="research_paper" id="rp_yes" value="yes"
+                            {% if existing.research_paper %}checked{% endif %}>
+                        <label for="rp_yes">Yes</label>
+                    </div>
+                    <div class="radio-opt">
+                        <input type="radio" name="research_paper" id="rp_no" value="no"
+                            {% if not existing or not existing.research_paper %}checked{% endif %}>
+                        <label for="rp_no">No</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if member.role == 'supervisor' %}
+        {% for field_name, question in score_questions %}
+        <div class="score-section">
+            <h4>{{ forloop.counter }}. {{ question.title }}</h4>
+            <p class="qdesc">{{ question.description }}</p>
+            <div class="score-grid">
+                {% for i in scores %}
+                <div class="score-option">
+                    <input type="radio" name="{{ field_name }}" id="{{ field_name }}_{{ i }}" value="{{ i }}"
+                        class="score-input"
+                        {% if existing %}{% with sv=existing|get_score:field_name %}{% if sv == i %}checked{% endif %}{% endwith %}{% endif %}
+                        required>
+                    <label for="{{ field_name }}_{{ i }}">{{ i }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="max-note">1 = lowest &bull; 10 = highest</div>
+        </div>
+        {% endfor %}
+
+        {% else %}
+        {% for field_name, question in examiner_questions %}
+        <div class="score-section">
+            <h4>{{ forloop.counter }}. {{ question.title }}</h4>
+            <p class="qdesc">{{ question.description }}</p>
+            <div class="score-grid">
+                {% for i in scores %}
+                {% if i <= question.max %}
+                <div class="score-option">
+                    <input type="radio" name="{{ field_name }}" id="{{ field_name }}_{{ i }}" value="{{ i }}"
+                        class="score-input"
+                        {% if existing %}{% with sv=existing|get_score:field_name %}{% if sv == i %}checked{% endif %}{% endwith %}{% endif %}
+                        required>
+                    <label for="{{ field_name }}_{{ i }}">{{ i }}</label>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="max-note">1 = lowest &bull; {{ question.max }} = highest</div>
+        </div>
+        {% endfor %}
+
+        <div class="presentation-block-wrap">
+            <h4>{{ examiner_questions|length|add:1 }}. Presentation (Score from 2 to 10, where 10 is the highest mark and 2 is the lowest mark)</h4>
+            {% for field_name, label in presentation_block %}
+            <div class="presentation-item">
+                <div class="pi-label">{{ label }}</div>
+                <div class="score-grid">
+                    {% for val in presentation_scores %}
+                    <div class="score-option">
+                        <input type="radio" name="{{ field_name }}" id="{{ field_name }}_{{ val }}" value="{{ val }}"
+                            class="score-input"
+                            {% if existing %}{% with sv=existing|get_score:field_name %}{% if sv == val %}checked{% endif %}{% endwith %}{% endif %}
+                            required>
+                        <label for="{{ field_name }}_{{ val }}">{{ val }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="max-note">Each item scored 2, 4, 6, 8 or 10 &bull; Section total out of 50</div>
+        </div>
+
+        {% with field_name=overall_question.0 question=overall_question.1 %}
+        <div class="score-section">
+            <h4>{{ examiner_questions|length|add:2 }}. {{ question.title }}</h4>
+            <p class="qdesc">{{ question.description }}</p>
+            <div class="score-grid">
+                {% for i in scores %}
+                {% if i <= question.max %}
+                <div class="score-option">
+                    <input type="radio" name="{{ field_name }}" id="{{ field_name }}_{{ i }}" value="{{ i }}"
+                        class="score-input"
+                        {% if existing %}{% with sv=existing|get_score:field_name %}{% if sv == i %}checked{% endif %}{% endwith %}{% endif %}
+                        required>
+                    <label for="{{ field_name }}_{{ i }}">{{ i }}</label>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="max-note">1 = lowest &bull; {{ question.max }} = highest</div>
+        </div>
+        {% endwith %}
+        {% endif %}
+
+        <div class="card">
+            <div class="form-group">
+                <label>Comments (may use back of paper as well)</label>
+                <textarea name="additional_info" rows="3" placeholder="Any additional comments...">{{ existing.additional_info|default:'' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>If you did some annotations on the thesis, please upload the document</label>
+                <input type="file" name="annotated_document" accept=".pdf" style="padding:0.4rem;">
+                <div style="font-size:0.78rem;color:#888;margin-top:0.3rem;">Importez 1 fichier compatible. 10 MB max.</div>
+                {% if existing.annotated_document %}
+                <div style="font-size:0.82rem;color:var(--green);margin-top:0.4rem;">
+                    Previously uploaded: {{ existing.annotated_document.name|slice:"12:" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="submit-section">
+            <button type="submit" class="submit-btn">
+                {% if existing %}Update Evaluation{% else %}Submit Evaluation{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function() {
+    const FORM_MAX = {{ form_max }};
+
+    function getValue(fieldName) {
+        const checked = document.querySelector(`input[name="${fieldName}"]:checked`);
+        return checked ? parseInt(checked.value, 10) : 0;
+    }
+
+    function updateTotal() {
+        let total = 0;
+        const seen = new Set();
+        document.querySelectorAll('.score-input').forEach(input => {
+            if (!seen.has(input.name)) {
+                seen.add(input.name);
+                total += getValue(input.name);
+            }
+        });
+
+        document.getElementById('liveTotal').textContent = total;
+        document.getElementById('liveMax').textContent = '/' + FORM_MAX;
+        document.getElementById('liveBreakdown').textContent = `${total}/${FORM_MAX}`;
+    }
+
+    document.querySelectorAll('.score-input').forEach(input => {
+        input.addEventListener('change', updateTotal);
+    });
+
+    updateTotal();
+})();
+</script>
+{% endblock %}

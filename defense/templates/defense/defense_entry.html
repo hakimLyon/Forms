@@ -1,0 +1,89 @@
+{% extends "defense/base.html" %}
+{% block title %}Defense - {{ student.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+.defense-hero {
+    min-height: calc(100vh - 200px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 2rem;
+}
+.defense-hero .icon-wrap {
+    width: 90px; height: 90px;
+    background: var(--aims-red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 32px rgba(107,11,31,0.3);
+}
+.defense-hero h1 { color: var(--aims-red); font-size: 1.6rem; margin-bottom: 0.5rem; }
+.thesis-box {
+    background: var(--aims-light);
+    border-left: 4px solid var(--aims-red);
+    border-radius: 0 10px 10px 0;
+    padding: 1.2rem 1.5rem;
+    text-align: left;
+    max-width: 700px;
+    margin: 1.5rem auto;
+}
+.thesis-box .label { font-size: 0.8rem; font-weight: 700; color: var(--aims-red); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem; }
+.thesis-box .title { font-size: 1.05rem; font-weight: 600; color: #222; line-height: 1.5; }
+.info-chips { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin: 1rem 0 2rem; }
+.chip { background: white; border: 1.5px solid var(--gray-200); border-radius: 20px; padding: 0.35rem 1rem; font-size: 0.82rem; color: #444; display: flex; align-items: center; gap: 5px; }
+.chip strong { color: var(--aims-red); }
+.enter-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 1rem 2.5rem;
+    background: var(--aims-red); color: white;
+    border-radius: 50px;
+    text-decoration: none; font-size: 1rem; font-weight: 700;
+    box-shadow: 0 6px 24px rgba(107,11,31,0.3);
+    transition: all 0.25s;
+}
+.enter-btn:hover { background: var(--aims-dark); transform: translateY(-2px); box-shadow: 0 10px 32px rgba(107,11,31,0.4); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="defense-hero">
+    <div class="icon-wrap">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+    </div>
+
+    <h1>Thesis Defense</h1>
+    <p style="color:#666;font-size:1rem;margin-bottom:0.5rem;">{{ student.session.name }}</p>
+
+    <div class="thesis-box">
+        <div class="label">Thesis Title</div>
+        <div class="title">{{ student.thesis_title }}</div>
+    </div>
+
+    <div class="info-chips">
+        <div class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Candidate: <strong>{{ student.full_name }}</strong>
+        </div>
+        {% if student.defense_date %}
+        <div class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Date: <strong>{{ student.defense_date }}</strong>
+        </div>
+        {% endif %}
+        <div class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            Room: <strong>AIMS Room {{ student.room }}</strong>
+        </div>
+        <div class="chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Time: <strong>{{ student.time }}</strong>
+        </div>
+    </div>
+
+    <a href="{% url 'panel_members' token %}" class="enter-btn">
+        Enter Evaluation
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+</div>
+{% endblock %}

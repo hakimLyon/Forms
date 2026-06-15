@@ -1,0 +1,31 @@
+{% extends "defense/base.html" %}
+{% block title %}Already Submitted - {{ student.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+.locked-wrap { max-width: 560px; margin: 3rem auto; text-align: center; }
+.lock-icon {
+    width: 90px; height: 90px;
+    background: #fff3e0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="locked-wrap">
+    <div class="lock-icon">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#e65100" stroke-width="2.5">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+    </div>
+    <h2 style="color:var(--aims-red);font-size:1.4rem;">This Form Has Already Been Submitted</h2>
+    <p style="color:#666;margin-top:0.6rem;">
+        An evaluation for <strong>{{ member.label }} - {{ member.name }}</strong> has already been recorded.
+        Only the person who submitted it can edit it.
+    </p>
+    <div class="action-btns" style="margin-top:1.5rem;">
+        <a href="{% url 'panel_members' token %}" class="btn btn-primary">Back to Panel</a>
+    </div>
+</div>
+{% endblock %}

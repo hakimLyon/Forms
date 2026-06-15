@@ -1,0 +1,260 @@
+{% extends "defense/base.html" %}
+{% block title %}Evaluation Submitted - {{ student.full_name }}{% endblock %}
+{% block extra_css %}
+<style>
+.result-wrap { max-width: 760px; margin: 3rem auto; text-align: center; }
+.success-icon {
+    width: 90px; height: 90px;
+    background: #e8f5e9;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+.result-card { background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 2rem; margin-top: 1.5rem; text-align: left; }
+.result-row { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid var(--gray-200); }
+.result-row:last-child { border-bottom: none; }
+.result-row .rlabel { font-size: 0.85rem; color: #666; }
+.result-row .rval { font-weight: 700; color: #222; }
+.total-row { background: var(--aims-light); border-radius: 10px; padding: 1rem 1.5rem; margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; }
+.total-row .tlabel { font-weight: 700; color: var(--aims-red); }
+.total-row .tscore { font-size: 1.8rem; font-weight: 800; color: var(--aims-red); }
+.grade-chip { display: inline-block; padding: 0.4rem 1.2rem; border-radius: 20px; font-weight: 700; font-size: 0.9rem; background: #e8f5e9; color: var(--green); margin-top: 0.5rem; }
+.action-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+
+.scoreboard { margin-top: 2rem; text-align: left; }
+.scoreboard h3 { color: var(--aims-red); font-size: 1rem; margin-bottom: 0.8rem; }
+.scoreboard-table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: var(--shadow); }
+.scoreboard table { width: 100%; border-collapse: collapse; background: white; }
+.scoreboard thead th {
+    background: var(--aims-red); color: white;
+    padding: 0.7rem 1rem; text-align: left;
+    font-size: 0.8rem; font-weight: 600; white-space: nowrap;
+}
+.scoreboard tbody tr { border-bottom: 1px solid var(--gray-200); }
+.scoreboard tbody tr.current-row { background: #fff8e1; }
+.scoreboard tbody tr:last-child { border-bottom: none; }
+.scoreboard td { padding: 0.7rem 1rem; font-size: 0.85rem; vertical-align: middle; }
+.scoreboard .role-pill {
+    display: inline-block; padding: 0.15rem 0.6rem; border-radius: 16px;
+    font-size: 0.72rem; font-weight: 700;
+}
+.role-pill.supervisor { background: #e3f2fd; color: #1565c0; }
+.role-pill.president  { background: #fff3e0; color: #e65100; }
+.role-pill.examiner   { background: #fce4ec; color: #c62828; }
+.scoreboard .you-tag {
+    display: inline-block; margin-left: 6px;
+    background: var(--aims-red); color: white;
+    font-size: 0.68rem; font-weight: 700;
+    padding: 0.1rem 0.5rem; border-radius: 12px;
+}
+.scoreboard .edit-link {
+    color: var(--aims-red); font-size: 0.8rem; font-weight: 600;
+    text-decoration: none; white-space: nowrap;
+}
+.scoreboard .edit-link:hover { text-decoration: underline; }
+.scoreboard-note { font-size: 0.8rem; color: #888; margin-top: 0.6rem; }
+
+.final-summary {
+    background: var(--aims-red); color: white;
+    border-radius: 14px; padding: 1.5rem 2rem; margin-top: 2rem;
+    text-align: center;
+}
+.final-summary .fs-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+.final-summary .fs-score { font-size: 2.4rem; font-weight: 800; margin: 0.3rem 0; }
+.final-summary .fs-grade {
+    display: inline-block; background: rgba(255,255,255,0.2);
+    padding: 0.3rem 1.2rem; border-radius: 20px;
+    font-weight: 700; font-size: 0.95rem;
+}
+.final-summary .fs-note { font-size: 0.78rem; opacity: 0.75; margin-top: 0.8rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="result-wrap">
+    <div class="success-icon">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.5">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+    </div>
+
+    <h2 style="color:var(--aims-red);font-size:1.5rem;">Evaluation Submitted!</h2>
+    <p style="color:#666;margin-top:0.4rem;">Your evaluation for <strong>{{ student.full_name }}</strong> has been recorded.</p>
+
+    {% if evaluation.role == 'supervisor' %}
+    <div class="result-card">
+        <h3 style="color:#333;margin-bottom:1rem;font-size:1rem;">Supervisor Evaluation</h3>
+        <div class="result-row">
+            <span class="rlabel">Clarity of problem & significance of study</span>
+            <span class="rval">{{ evaluation.score_clarity }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Literature knowledge & acknowledgment</span>
+            <span class="rval">{{ evaluation.score_literature }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Subject knowledge, methodology & conclusions</span>
+            <span class="rval">{{ evaluation.score_knowledge }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Critical analysis & original contribution</span>
+            <span class="rval">{{ evaluation.score_critical }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Presentation quality</span>
+            <span class="rval">{{ evaluation.score_presentation }}/10</span>
+        </div>
+        <div class="total-row">
+            <div class="tlabel">Total Score</div>
+            <div class="tscore">{{ evaluation.total_score_raw }}<span style="font-size:1rem;color:#888;">/50</span></div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="result-card">
+        <h3 style="color:#333;margin-bottom:1rem;font-size:1rem;">{{ evaluation.get_role_display }} Evaluation - Section 1</h3>
+        <div class="result-row">
+            <span class="rlabel">Introduction of topic</span>
+            <span class="rval">{{ evaluation.score_intro }}/5</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Smooth transition between sections (Logical flow)</span>
+            <span class="rval">{{ evaluation.score_transition }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Quality of content (Scientific and technical content)</span>
+            <span class="rval">{{ evaluation.score_quality }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Student analysis (analytical content)</span>
+            <span class="rval">{{ evaluation.score_analysis }}/5</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Clarity and correctness of content</span>
+            <span class="rval">{{ evaluation.score_correctness }}/5</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">Summary and conclusions</span>
+            <span class="rval">{{ evaluation.score_summary }}/5</span>
+        </div>
+        <div class="total-row">
+            <div class="tlabel">Subtotal</div>
+            <div class="tscore">{{ evaluation.score_intro|add:evaluation.score_transition|add:evaluation.score_quality|add:evaluation.score_analysis|add:evaluation.score_correctness|add:evaluation.score_summary }}<span style="font-size:1rem;color:#888;">/40</span></div>
+        </div>
+    </div>
+
+    <div class="result-card">
+        <h3 style="color:#333;margin-bottom:1rem;font-size:1rem;">Presentation (Section 2)</h3>
+        <div class="result-row">
+            <span class="rlabel">a- Professional and confident delivery</span>
+            <span class="rval">{{ evaluation.score_delivery }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">b- Engaged with audience</span>
+            <span class="rval">{{ evaluation.score_engagement }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">c- Overall structure and organization</span>
+            <span class="rval">{{ evaluation.score_structure }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">d- Length of talk</span>
+            <span class="rval">{{ evaluation.score_timing }}/10</span>
+        </div>
+        <div class="result-row">
+            <span class="rlabel">e- Response to questions from audience</span>
+            <span class="rval">{{ evaluation.score_qa }}/10</span>
+        </div>
+        <div class="total-row">
+            <div class="tlabel">Subtotal</div>
+            <div class="tscore">{{ evaluation.presentation_block_raw }}<span style="font-size:1rem;color:#888;">/50</span></div>
+        </div>
+    </div>
+
+    <div class="result-card">
+        <h3 style="color:#333;margin-bottom:1rem;font-size:1rem;">Overall Impression (Section 3)</h3>
+        <div class="result-row">
+            <span class="rlabel">Overall Impression/Quality</span>
+            <span class="rval">{{ evaluation.score_overall }}/10</span>
+        </div>
+        <div class="total-row">
+            <div class="tlabel">Total Score</div>
+            <div class="tscore">{{ evaluation.total_score_raw }}<span style="font-size:1rem;color:#888;">/100</span></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="result-card">
+        <div class="total-row" style="margin-top:0;">
+            <div>
+                <div class="tlabel">Grade</div>
+                <div class="grade-chip">{{ evaluation.grade_label }}</div>
+            </div>
+            <div class="tscore">{{ evaluation.total_score_raw }}<span style="font-size:1rem;color:#888;">/{{ evaluation.total_score_max }}</span></div>
+        </div>
+
+        {% if evaluation.role == 'supervisor' %}
+        <div style="font-size:0.8rem;color:#888;margin-top:0.8rem;text-align:center;">
+            Thanks for your  submission.
+        </div>
+        {% else %}
+        <div style="font-size:0.8rem;color:#888;margin-top:0.8rem;text-align:center;">
+            Thanks for your  submisssion.
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="scoreboard">
+        <h3>All Submitted Marks</h3>
+        <div class="scoreboard-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Evaluator</th>
+                        <th>Role</th>
+                        <th>Score</th>
+                        <th>Grade</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in eval_rows %}
+                    <tr class="{% if row.is_current %}current-row{% endif %}">
+                        <td>
+                            {{ row.evaluation.evaluator_name }}
+                            {% if row.is_current %}<span class="you-tag">YOU</span>{% endif %}
+                        </td>
+                        <td><span class="role-pill {{ row.evaluation.role }}">{{ row.evaluation.get_role_display }}</span></td>
+                        <td>{{ row.evaluation.total_score_raw }}/{{ row.evaluation.total_score_max }}</td>
+                        <td>{{ row.evaluation.grade_label }}</td>
+                        <td>
+                            {% if row.is_current and row.member_index is not None %}
+                            <a href="{% url 'evaluation_form' token row.member_index %}" class="edit-link">Edit</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align:center;color:#999;padding:1.2rem;">No evaluations submitted yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="scoreboard-note">
+            You can only edit the row marked "YOU" - the evaluation you personally submitted.
+        </div>
+    </div>
+
+    {% if final_grade_info %}
+    <div class="final-summary">
+        <div class="fs-label">Student's Final Grade</div>
+        <div class="fs-score">{{ final_grade_info.final_score }}%</div>
+        <div class="fs-grade">{{ final_grade_info.final_label }}</div>
+        <div class="fs-note">THis will count of the Final Marks</div>
+    </div>
+    {% endif %}
+
+    <div class="action-btns">
+        <a href="{% url 'panel_members' token %}" class="btn btn-primary">Back to Panel</a>
+        <a href="{% url 'evaluation_form' token member_index %}" class="btn btn-outline">Edit Response</a>
+    </div>
+</div>
+{% endblock %}
