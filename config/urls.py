@@ -1,7 +1,7 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 from django.conf import settings
-from django.conf.urls.static import static
+from django.views.static import serve as media_serve
 from defense import views
 
 urlpatterns = [
@@ -26,5 +26,6 @@ urlpatterns = [
     path('defense/<str:token>/end/', views.end_defense_from_panel, name='end_defense_from_panel'),
     path('defense/<str:token>/eval/<int:member_index>/', views.evaluation_form, name='evaluation_form'),
     path('defense/<str:token>/result/<int:eval_id>/', views.evaluation_result, name='evaluation_result'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
-  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    # Serve uploaded media in production (static is handled by WhiteNoise).
+    re_path(r'^media/(?P<path>.*)$', media_serve, {'document_root': settings.MEDIA_ROOT}),
+]
