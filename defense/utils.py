@@ -488,7 +488,7 @@ def generate_pv_docx(student, evaluations):
         inner = ' + '.join(parts)
         final_formula = f'Final Grade = 40%(Supervisor) + 60%(({inner})/{n_total})'
 
-    add_table_row(final_formula, scores['final_grade'], grey=True, col1_size=13.5, col2_size=14)
+    add_table_row(final_formula, f"{scores['final_score']}/100 — {scores['final_grade']}", grey=True, col1_size=13.5, col2_size=14)
 
     add_para()
 
@@ -692,7 +692,7 @@ def generate_pv_pdf(student, evaluations):
 
     t_data.append([
         Paragraph(final_formula, final_cell_style),
-        Paragraph(scores['final_grade'], final_cell_style_center),
+        Paragraph(f"{scores['final_score']}/100 — {scores['final_grade']}", final_cell_style_center),
     ])
 
     last = len(t_data) - 1
