@@ -10,6 +10,7 @@ urlpatterns = [
     path('login/', views.password_gate, name='password_gate'),
     path('sessions/', views.sessions_list, name='sessions_list'),
     path('template/download/', views.download_template, name='download_template'),
+    path('template/sample/', views.download_sample, name='download_sample'),
     path('sessions/<int:session_id>/', views.session_rooms, name='session_rooms'),
     path('sessions/<int:session_id>/import/', views.import_excel, name='import_excel'),
     path('sessions/<int:session_id>/room/<int:room_number>/', views.room_students, name='room_students'),

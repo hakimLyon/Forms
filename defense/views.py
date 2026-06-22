@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.conf import settings
 from django.http import HttpResponse
 from django.utils import timezone
 from django.contrib import messages
@@ -134,6 +135,21 @@ def download_template(request):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     )
     resp['Content-Disposition'] = 'attachment; filename="thesis_defense_import_template.xlsx"'
+    return resp
+
+
+@require_auth
+def download_sample(request):
+    """Download a filled sample Excel (with 10-char alphanumeric IDStudent values)."""
+    import os
+    path = os.path.join(settings.BASE_DIR, 'defense', 'sample_data', 'test_with_idstudent.xlsx')
+    with open(path, 'rb') as fh:
+        data = fh.read()
+    resp = HttpResponse(
+        data,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    resp['Content-Disposition'] = 'attachment; filename="sample_students_with_idstudent.xlsx"'
     return resp
 
 
