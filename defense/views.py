@@ -211,10 +211,11 @@ def panel_members(request, token):
     if student.defense_status != 'ongoing':
         return render(request, 'defense/defense_closed.html', {'student': student})
     members = student.get_panel_members()
-    submitted_names = list(
-        Evaluation.objects.filter(student=student)
-                          .values_list('evaluator_name', flat=True)
-    )
+    evaluations = list(Evaluation.objects.filter(student=student).order_by('role', 'evaluator_name'))
+    submitted_names = [e.evaluator_name for e in evaluations]
+    # As soon as at least one form is submitted, expose the per-evaluator grades
+    # and the (provisional) final grade.
+    scores = calc_scores(student, evaluations) if evaluations else None
     # Is this the person who started? They can end it.
     can_end = (
         request.session.session_key == student.started_by_session
@@ -225,6 +226,8 @@ def panel_members(request, token):
         'members': members,
         'token': token,
         'submitted_names': submitted_names,
+        'evaluations': evaluations,
+        'scores': scores,
         'can_end': can_end,
     })
 
