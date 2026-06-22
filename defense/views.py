@@ -137,6 +137,7 @@ def download_template(request):
     return resp
 
 
+@require_auth
 def import_excel(request, session_id):
     session = get_object_or_404(Session, pk=session_id)
     if request.method == 'POST' and request.FILES.get('excel_file'):
