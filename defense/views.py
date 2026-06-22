@@ -9,7 +9,7 @@ from .utils import (
     import_excel_students, generate_pv_docx, generate_pv_pdf, calc_scores,
     SUPERVISOR_QUESTIONS, EXAMINER_QUESTIONS, PRESENTATION_BLOCK,
     OVERALL_QUESTION, EVALUATION_ROLES, generate_detail_pdf,
-    get_evaluation_detail_rows,
+    get_evaluation_detail_rows, build_import_template,
 )
 
 
@@ -126,6 +126,17 @@ def end_defense(request, student_id):
 
 
 @require_auth
+def download_template(request):
+    """Download a blank Excel import template with all required columns."""
+    buf = build_import_template()
+    resp = HttpResponse(
+        buf.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    resp['Content-Disposition'] = 'attachment; filename="thesis_defense_import_template.xlsx"'
+    return resp
+
+
 def import_excel(request, session_id):
     session = get_object_or_404(Session, pk=session_id)
     if request.method == 'POST' and request.FILES.get('excel_file'):

@@ -128,6 +128,7 @@ def import_excel_students(session, file_obj):
 
         s = Student(
             session=session,
+            id_student=clean_name(row.get('IDStudent', row.get('ID Student', ''))),
             time=clean_name(row.get('Time (GMT)', '')),
             surname=surname,
             given_names=given,
@@ -147,10 +148,67 @@ def import_excel_students(session, file_obj):
             examiner_1_affiliation=clean_name(row.get('Affiliation', '')),
             examiner_2_name=clean_name(row.get('Examiner 2', '')),
             examiner_2_email=clean_name(row.get('Examiner 2 email', '')),
+            examiner_3_name=clean_name(row.get('Examiner 3', '')),
+            examiner_3_email=clean_name(row.get('Examiner 3 email', '')),
         )
         s.save()
         count += 1
     return count
+
+
+# Columns recognised by import_excel_students (order matters for the template).
+IMPORT_TEMPLATE_COLUMNS = [
+    'IDStudent', 'Date', 'Time (GMT)', 'Room',
+    'Surname', 'Given Names', 'Research Project title',
+    'Academic Supervisors', 'Email of Supervisor', 'Institution of Supervisors',
+    'Academic Supervisors 2', 'Email of Supervisor 2',
+    'President Jury', 'Email', 'Affiliation',
+    'Examiner 1', 'Examiner 1 email',
+    'Examiner 2', 'Examiner 2 email',
+    'Examiner 3', 'Examiner 3 email',
+]
+
+
+def build_import_template():
+    """Return a BytesIO .xlsx with all import columns and one example row."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Students'
+
+    header_font = Font(bold=True, color='FFFFFF')
+    header_fill = PatternFill('solid', fgColor='B01C2E')  # AIMS red
+    for col, name in enumerate(IMPORT_TEMPLATE_COLUMNS, start=1):
+        c = ws.cell(row=1, column=col, value=name)
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal='center', vertical='center')
+        ws.column_dimensions[c.column_letter].width = max(14, len(name) + 2)
+
+    example = {
+        'IDStudent': '0001', 'Date': '2026-07-15', 'Time (GMT)': '09:00',
+        'Room': '1', 'Surname': 'Diop', 'Given Names': 'Awa',
+        'Research Project title': 'Optimization methods for ...',
+        'Academic Supervisors': 'Dr. John Doe',
+        'Email of Supervisor': 'jdoe@example.com',
+        'Institution of Supervisors': 'AIMS Senegal',
+        'Academic Supervisors 2': '', 'Email of Supervisor 2': '',
+        'President Jury': 'Prof. Marie Sow', 'Email': 'msow@example.com',
+        'Affiliation': 'UCAD',
+        'Examiner 1': 'Dr. Alpha Ba', 'Examiner 1 email': 'aba@example.com',
+        'Examiner 2': 'Dr. Bineta Fall', 'Examiner 2 email': 'bfall@example.com',
+        'Examiner 3': '', 'Examiner 3 email': '',
+    }
+    for col, name in enumerate(IMPORT_TEMPLATE_COLUMNS, start=1):
+        ws.cell(row=2, column=col, value=example.get(name, ''))
+
+    ws.freeze_panes = 'A2'
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf
 
 
 def calc_scores(student, evaluations):
@@ -315,9 +373,9 @@ def generate_pv_docx(student, evaluations):
 
     add_field('Defense date:', defense_date_str)
 
-    # Student line: "Given Names Surname - ID: <academic_year>"
-    student_id = f"{student.session.academic_year}"
-    add_field('Student:', f'{student.full_name()} - ID: {student_id}')
+    # Student line: "Given Names Surname - ID-<IDStudent>"
+    student_id = student.id_student or student.session.academic_year
+    add_field('Student:', f'{student.full_name()} - ID-{student_id}')
 
     # Supervisor(s)
     add_field('Supervisor:', student.supervisor_1_name)
@@ -634,7 +692,7 @@ def generate_pv_pdf(student, evaluations):
         defense_date_str = d.strftime('%B %d, %Y') if hasattr(d, 'strftime') else str(d)
 
     field('Defense date:', defense_date_str)
-    field('Student:', f'{student.full_name()} - ID: {student.session.academic_year}')
+    field('Student:', f'{student.full_name()} - ID-{student.id_student or student.session.academic_year}')
     field('Supervisor:', student.supervisor_1_name)
     if student.supervisor_2_name:
         field('Co-Supervisor:', student.supervisor_2_name)

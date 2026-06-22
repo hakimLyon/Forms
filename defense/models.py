@@ -67,6 +67,7 @@ class Student(models.Model):
     ]
 
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='students')
+    id_student = models.CharField(max_length=50, blank=True, default='')
     time = models.CharField(max_length=20, blank=True)
     surname = models.CharField(max_length=100)
     given_names = models.CharField(max_length=200)
