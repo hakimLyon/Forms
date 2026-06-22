@@ -174,9 +174,9 @@ def calc_scores(student, evaluations):
     return {
         'supervisor_evals': supervisor_evals,
         'examiner_evals': examiner_evals,
-        'sup_avg': round(sup_avg, 1),
-        'exam_avg': round(exam_avg, 1),
-        'final_score': round(final, 1),
+        'sup_avg': round(sup_avg, 2),
+        'exam_avg': round(exam_avg, 2),
+        'final_score': round(final, 2),
         'final_grade': grade(final),
     }
 

@@ -76,7 +76,7 @@
                 <td><strong>{{ ev.evaluator_name }}</strong></td>
                 <td>{{ ev.get_role_display }}</td>
                 <td>{{ ev.total_score_raw }}/50</td>
-                <td>{{ ev.total_score_percent|floatformat:1 }}/100</td>
+                <td>{{ ev.total_score_percent|floatformat:2 }}/100</td>
                 <td><span class="badge badge-{% if ev.total_score_percent >= 85 %}done{% elif ev.total_score_percent >= 60 %}ongoing{% else %}pending{% endif %}">{{ ev.grade_label }}</span></td>
             </tr>
             {% endfor %}
