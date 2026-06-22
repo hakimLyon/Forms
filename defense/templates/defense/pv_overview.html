@@ -89,10 +89,13 @@
     <div class="final-formula">
         <div><strong>Final Grade Formula</strong></div>
         <div style="margin-top:0.5rem;">
-            = 40% × Supervisor avg (<strong>{{ sup_avg }}%</strong>) + 60% × Examiners avg (<strong>{{ exam_avg }}%</strong>)
+            = 40% × Supervisor avg (<strong>{{ sup_avg }}%</strong>) + 60% × Examiners &amp; Jury President avg (<strong>{{ exam_avg }}%</strong>)
         </div>
         <div style="margin-top:0.3rem;font-size:0.78rem;color:#888;">
             = 0.4 × {{ sup_avg }} + 0.6 × {{ exam_avg }} = <strong>{{ final_score }}/100</strong>
+        </div>
+        <div style="margin-top:0.4rem;font-size:0.72rem;color:#999;font-style:italic;">
+            Examiners &amp; Jury President avg = average of all examiner and jury president evaluations (equal weight each).
         </div>
     </div>
     <div class="final-score">
