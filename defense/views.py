@@ -75,15 +75,35 @@ def session_rooms(request, session_id):
     })
 
 
+def _absolute_uri(request, path):
+    """Absolute URL for links shared outside the app. Behind the Cloudflare/
+    Caddy proxy Django sees plain http, so force https in production."""
+    url = request.build_absolute_uri(path)
+    if not settings.DEBUG and url.startswith('http://'):
+        url = 'https://' + url[len('http://'):]
+    return url
+
+
 @require_auth
 def room_students(request, session_id, room_number):
+    from django.urls import reverse
     session = get_object_or_404(Session, pk=session_id)
-    students = Student.objects.filter(session=session, room=room_number).order_by('time')
+    students = list(Student.objects.filter(session=session, room=room_number).order_by('time'))
+
+    # Shareable links are built server-side (the old template-side string
+    # concatenation silently produced an empty URL).
+    pub_url = _absolute_uri(request, reverse('room_public', args=[session.id, room_number]))
+    for s in students:
+        s.defense_url = (
+            _absolute_uri(request, reverse('defense_entry', args=[s.start_link_token]))
+            if s.start_link_token else ''
+        )
 
     return render(request, 'defense/room_students.html', {
         'session': session,
         'room_number': room_number,
         'students': students,
+        'pub_url': pub_url,
     })
 
 
@@ -411,7 +431,8 @@ def _build_edit_url(request, token, evaluation):
     from django.urls import reverse
     if not evaluation.edit_token:
         return None
-    return request.build_absolute_uri(
+    return _absolute_uri(
+        request,
         reverse('evaluation_edit_link', args=[token, evaluation.edit_token])
     )
 

@@ -64,7 +64,6 @@ tbody tr.ongoing-row { background:#e3f2fd !important; }
 </div>
 
 {# ── Room-level public link (fixed URL, always available) ─────────────────── #}
-{% with pub_url=request.scheme|add:"://"|add:request.get_host|add:"/sessions/"|add:session.id|stringformat:"d"|add:"/room/"|add:room_number|stringformat:"d"|add:"/public/" %}
 <div class="room-link-bar">
     <span class="rl-label">📡 Room Public Link</span>
     <span class="rl-url" id="roomLinkUrl">{{ pub_url }}</span>
@@ -73,7 +72,6 @@ tbody tr.ongoing-row { background:#e3f2fd !important; }
         <a href="{{ pub_url }}" target="_blank" class="gen-btn" style="background:#2e7d32;">👁 View</a>
     </div>
 </div>
-{% endwith %}
 
 <div class="table-card">
     <div class="table-toolbar">
@@ -149,10 +147,10 @@ tbody tr.ongoing-row { background:#e3f2fd !important; }
 
                         {% elif student.defense_status == 'ongoing' %}
                             <span class="start-btn started">▶ Started</span>
-                            <a href="{% url 'defense_entry' student.start_link_token %}"
+                            <a href="{{ student.defense_url }}"
                                class="link-btn" target="_blank">🔗 Link</a>
                             <button class="copy-btn"
-                               onclick="copyText('{{ request.scheme }}://{{ request.get_host }}{% url 'defense_entry' student.start_link_token %}')">
+                               onclick="copyText('{{ student.defense_url }}')">
                                📋 Copy
                             </button>
                             <a href="{% url 'end_defense' student.id %}"

@@ -8,6 +8,9 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     'https://thesisdefense.aimssnportal.org',
 ]
+# Behind Cloudflare Tunnel + Caddy: trust the forwarded protocol header so
+# request.is_secure()/request.scheme reflect the real https origin.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Persistent data directory (mounted as a Coolify volume) for the SQLite DB
 # and uploaded media, so they survive redeploys.
