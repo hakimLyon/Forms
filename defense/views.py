@@ -125,22 +125,16 @@ def start_defense(request, student_id):
 
 @require_auth
 def end_defense(request, student_id):
-    """End a defense - only the person who started it (or admin) can do this."""
+    """End a defense from the (password-protected) room page.
+    Any authenticated coordinator can do this, so the defense is never
+    stuck if the person who started it is unavailable. The End button on
+    the PUBLIC panel page remains restricted to the starter."""
     student = get_object_or_404(Student, pk=student_id)
-    # Allow if: same session started it, OR Django admin (staff)
-    can_end = (
-        request.session.session_key == student.started_by_session
-        or request.user.is_staff
-    )
-    if not can_end:
-        messages.error(request, "Only the person who started this defense can end it.")
-        return redirect('room_students',
-                        session_id=student.session_id,
-                        room_number=student.room)
     if student.defense_status == 'ongoing':
         student.defense_status = 'done'
         student.ended_at = timezone.now()
         student.save()
+        messages.success(request, f"Defense for {student.full_name()} marked as done.")
     return redirect('room_students',
                     session_id=student.session_id,
                     room_number=student.room)
@@ -149,17 +143,11 @@ def end_defense(request, student_id):
 @require_auth
 def reopen_defense(request, student_id):
     """Undo an accidental 'End Defense': put the defense back to ongoing.
-    Same permission rule as ending it (starter's session or staff).
-    The token and all evaluations are kept, so the panel link and the
-    evaluators' personal edit links work again immediately."""
+    Any authenticated coordinator can do this (the starter may not be
+    available). The token and all evaluations are kept, so the panel link
+    and the evaluators' personal edit links work again immediately."""
     student = get_object_or_404(Student, pk=student_id)
-    can_reopen = (
-        request.session.session_key == student.started_by_session
-        or request.user.is_staff
-    )
-    if not can_reopen:
-        messages.error(request, "Only the person who started this defense can reopen it.")
-    elif student.defense_status == 'done':
+    if student.defense_status == 'done':
         student.defense_status = 'ongoing'
         student.ended_at = None
         student.save()
@@ -259,9 +247,11 @@ def panel_members(request, token):
     members = student.get_panel_members()
     all_evaluations = list(Evaluation.objects.filter(student=student).order_by('role', 'evaluator_name'))
     submitted_names = [e.evaluator_name for e in all_evaluations]
-    # Is this the person who started? They can end it.
+    # Coordinator = the session that started the defense, anyone logged into
+    # the platform (the starter may be unavailable), or Django staff.
     can_end = (
         request.session.session_key == student.started_by_session
+        or request.session.get('authenticated')
         or request.user.is_staff
     )
     # Google Forms model: respondents never see each other's answers.
@@ -286,10 +276,11 @@ def panel_members(request, token):
 
 
 def end_defense_from_panel(request, token):
-    """End a defense from the panel page (starter's button)."""
+    """End a defense from the panel page (coordinator's button)."""
     student = get_object_or_404(Student, start_link_token=token)
     can_end = (
         request.session.session_key == student.started_by_session
+        or request.session.get('authenticated')
         or request.user.is_staff
     )
     if not can_end:
@@ -444,9 +435,10 @@ def evaluation_result(request, token, eval_id):
     evaluation = get_object_or_404(Evaluation, pk=eval_id, student=student)
 
     # Google Forms model: a respondent only ever sees their own response.
-    # The coordinator (session that started the defense, or staff) sees all.
+    # Coordinator = starter session, anyone logged into the platform, or staff.
     is_coordinator = (
         request.session.session_key == student.started_by_session
+        or request.session.get('authenticated')
         or request.user.is_staff
     )
     is_owner = (
