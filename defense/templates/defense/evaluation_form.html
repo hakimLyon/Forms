@@ -140,28 +140,26 @@
                 <textarea name="thesis_title" rows="3" required>{{ existing.thesis_title_confirmed|default:student.thesis_title }}</textarea>
             </div>
             <div class="form-group">
-                <label>You are <span class="req">*</span></label>
-                <div class="radio-group">
-                    {% for val, label in evaluation_roles %}
-                    <div class="radio-opt">
-                        <input type="radio" name="you_are" id="role_{{ val }}" value="{{ val }}"
-                            {% if existing.role == val %}checked{% elif not existing and member.role == val %}checked{% endif %}>
-                        <label for="role_{{ val }}">{{ label }}</label>
-                    </div>
-                    {% endfor %}
+                <label>You are</label>
+                <div style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.55rem 1.1rem; background:var(--aims-light,#fdf2f2); border:1.5px solid var(--aims-red); border-radius:8px; color:var(--aims-red); font-weight:700; font-size:0.95rem;">
+                    {{ member.label }}
+                </div>
+                <div style="font-size:0.75rem; color:#999; margin-top:0.4rem;">
+                    Your role comes from the panel block you selected. If this is not you,
+                    go back to the panel and pick your own block.
                 </div>
             </div>
             <div class="form-group">
                 <label>Any research paper coming out from the project? <span class="req">*</span></label>
                 <div class="radio-group">
                     <div class="radio-opt">
-                        <input type="radio" name="research_paper" id="rp_yes" value="yes"
-                            {% if existing.research_paper %}checked{% endif %}>
+                        <input type="radio" name="research_paper" id="rp_yes" value="yes" required
+                            {% if existing and existing.research_paper %}checked{% endif %}>
                         <label for="rp_yes">Yes</label>
                     </div>
                     <div class="radio-opt">
-                        <input type="radio" name="research_paper" id="rp_no" value="no"
-                            {% if not existing or not existing.research_paper %}checked{% endif %}>
+                        <input type="radio" name="research_paper" id="rp_no" value="no" required
+                            {% if existing and not existing.research_paper %}checked{% endif %}>
                         <label for="rp_no">No</label>
                     </div>
                 </div>
