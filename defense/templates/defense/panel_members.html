@@ -125,10 +125,16 @@
     Each evaluator clicks their own block &bull; Submissions are independent
 </p>
 
-{% if evaluations %}
+{# Grades are coordinator-only, like the Responses tab of a Google Form. #}
+{% if can_end and evaluations %}
 <div class="card" style="margin-top:1.5rem; background:#fff; border:1px solid #eee; border-radius:12px; padding:1.2rem 1.4rem;">
-    <div style="font-weight:700; color:var(--aims-red); margin-bottom:0.8rem; font-size:1.05rem;">
-        Grades submitted so far
+    <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.8rem;">
+        <div style="font-weight:700; color:var(--aims-red); font-size:1.05rem;">
+            Grades submitted so far
+        </div>
+        <div style="font-size:0.72rem; color:#999; font-style:italic;">
+            Visible only to you (coordinator) &mdash; evaluators cannot see this
+        </div>
     </div>
     <div style="overflow-x:auto;">
     <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">

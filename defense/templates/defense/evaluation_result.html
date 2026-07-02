@@ -192,19 +192,15 @@
             <div class="tscore">{{ evaluation.total_score_raw }}<span style="font-size:1rem;color:#888;">/{{ evaluation.total_score_max }}</span></div>
         </div>
 
-        {% if evaluation.role == 'supervisor' %}
         <div style="font-size:0.8rem;color:#888;margin-top:0.8rem;text-align:center;">
-            Thanks for your  submission.
+            Your response has been recorded. Thank you for your submission.
         </div>
-        {% else %}
-        <div style="font-size:0.8rem;color:#888;margin-top:0.8rem;text-align:center;">
-            Thanks for your  submisssion.
-        </div>
-        {% endif %}
     </div>
 
+    {# Scoreboard + final grade are coordinator-only (Google Forms "Responses" model). #}
+    {% if is_coordinator %}
     <div class="scoreboard">
-        <h3>All Submitted Marks</h3>
+        <h3>All Submitted Marks <span style="font-size:0.7rem;color:#999;font-weight:400;font-style:italic;">&mdash; visible only to the coordinator</span></h3>
         <div class="scoreboard-table-wrap">
             <table>
                 <thead>
@@ -251,6 +247,7 @@
         <div class="fs-note">This will count towards the Final Marks</div>
     </div>
     {% endif %}
+    {% endif %}{# end is_coordinator #}
 
     <div class="action-btns">
         <a href="{% url 'panel_members' token %}" class="btn btn-primary">Back to Panel</a>

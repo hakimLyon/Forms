@@ -211,16 +211,18 @@ def panel_members(request, token):
     if student.defense_status != 'ongoing':
         return render(request, 'defense/defense_closed.html', {'student': student})
     members = student.get_panel_members()
-    evaluations = list(Evaluation.objects.filter(student=student).order_by('role', 'evaluator_name'))
-    submitted_names = [e.evaluator_name for e in evaluations]
-    # As soon as at least one form is submitted, expose the per-evaluator grades
-    # and the (provisional) final grade.
-    scores = calc_scores(student, evaluations) if evaluations else None
+    all_evaluations = list(Evaluation.objects.filter(student=student).order_by('role', 'evaluator_name'))
+    submitted_names = [e.evaluator_name for e in all_evaluations]
     # Is this the person who started? They can end it.
     can_end = (
         request.session.session_key == student.started_by_session
         or request.user.is_staff
     )
+    # Google Forms model: respondents never see each other's answers.
+    # Only the coordinator (the session that started the defense, or staff)
+    # gets the per-evaluator grades and the provisional final grade.
+    evaluations = all_evaluations if can_end else []
+    scores = calc_scores(student, all_evaluations) if (can_end and all_evaluations) else None
     return render(request, 'defense/panel_members.html', {
         'student': student,
         'members': members,
@@ -341,8 +343,24 @@ def evaluation_form(request, token, member_index):
 
 
 def evaluation_result(request, token, eval_id):
-    evaluation = get_object_or_404(Evaluation, pk=eval_id)
     student = get_object_or_404(Student, start_link_token=token)
+    # Scope the evaluation to THIS student so an eval_id from another
+    # defense can never be read through this token.
+    evaluation = get_object_or_404(Evaluation, pk=eval_id, student=student)
+
+    # Google Forms model: a respondent only ever sees their own response.
+    # The coordinator (session that started the defense, or staff) sees all.
+    is_coordinator = (
+        request.session.session_key == student.started_by_session
+        or request.user.is_staff
+    )
+    is_owner = (
+        not evaluation.submitted_by_session  # legacy rows without a session
+        or request.session.session_key == evaluation.submitted_by_session
+    )
+    if not is_owner and not is_coordinator:
+        return redirect('panel_members', token=token)
+
     members = student.get_panel_members()
     member_index = 0
     for i, m in enumerate(members):
@@ -350,26 +368,25 @@ def evaluation_result(request, token, eval_id):
             member_index = i
             break
 
-    all_evaluations = Evaluation.objects.filter(student=student).order_by('role', 'evaluator_name')
-
-    # Build a lookup so the template can show an "Edit" link for any row,
-    # mapping each evaluation back to its panel member index.
-    name_to_index = {m['name']: i for i, m in enumerate(members)}
+    # The scoreboard of all marks and the aggregated final grade are
+    # owner-only information (like the "Responses" tab in Google Forms).
     eval_rows = []
-    for ev in all_evaluations:
-        eval_rows.append({
-            'evaluation': ev,
-            'member_index': name_to_index.get(ev.evaluator_name),
-            'is_current': ev.id == evaluation.id,
-        })
-
     final_grade_info = None
-    if all_evaluations.exists():
-        scores = calc_scores(student, list(all_evaluations))
-        final_grade_info = {
-            'final_score': scores['final_score'],
-            'final_label': scores['final_grade'],
-        }
+    if is_coordinator:
+        all_evaluations = Evaluation.objects.filter(student=student).order_by('role', 'evaluator_name')
+        name_to_index = {m['name']: i for i, m in enumerate(members)}
+        for ev in all_evaluations:
+            eval_rows.append({
+                'evaluation': ev,
+                'member_index': name_to_index.get(ev.evaluator_name),
+                'is_current': ev.id == evaluation.id,
+            })
+        if all_evaluations.exists():
+            scores = calc_scores(student, list(all_evaluations))
+            final_grade_info = {
+                'final_score': scores['final_score'],
+                'final_label': scores['final_grade'],
+            }
 
     return render(request, 'defense/evaluation_result.html', {
         'evaluation': evaluation,
@@ -378,6 +395,7 @@ def evaluation_result(request, token, eval_id):
         'member_index': member_index,
         'eval_rows': eval_rows,
         'final_grade_info': final_grade_info,
+        'is_coordinator': is_coordinator,
     })
 
 
