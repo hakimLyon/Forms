@@ -127,6 +127,32 @@ def end_defense(request, student_id):
 
 
 @require_auth
+def reopen_defense(request, student_id):
+    """Undo an accidental 'End Defense': put the defense back to ongoing.
+    Same permission rule as ending it (starter's session or staff).
+    The token and all evaluations are kept, so the panel link and the
+    evaluators' personal edit links work again immediately."""
+    student = get_object_or_404(Student, pk=student_id)
+    can_reopen = (
+        request.session.session_key == student.started_by_session
+        or request.user.is_staff
+    )
+    if not can_reopen:
+        messages.error(request, "Only the person who started this defense can reopen it.")
+    elif student.defense_status == 'done':
+        student.defense_status = 'ongoing'
+        student.ended_at = None
+        student.save()
+        messages.success(
+            request,
+            f"Defense for {student.full_name()} reopened - evaluators can submit and edit again."
+        )
+    return redirect('room_students',
+                    session_id=student.session_id,
+                    room_number=student.room)
+
+
+@require_auth
 def download_template(request):
     """Download a blank Excel import template with all required columns."""
     buf = build_import_template()

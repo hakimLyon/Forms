@@ -157,7 +157,7 @@ tbody tr.ongoing-row { background:#e3f2fd !important; }
                             </button>
                             <a href="{% url 'end_defense' student.id %}"
                                class="end-btn"
-                               onclick="return confirm('End this defense? This cannot be undone without admin.')">
+                               onclick="return confirm('End this defense? Evaluators will no longer be able to submit or edit. You can reopen it later if needed.')">
                                ■ Done
                             </a>
 
@@ -165,6 +165,11 @@ tbody tr.ongoing-row { background:#e3f2fd !important; }
                             <span class="start-btn disabled">✓ Done</span>
                             <a href="{% url 'pv_overview' student.id %}" class="pv-btn">📄 PV</a>
                             <a href="{% url 'student_detail' student.id %}" class="pv-btn">🔍 Detail</a>
+                            <a href="{% url 'reopen_defense' student.id %}"
+                               class="end-btn" style="background:#2e7d32;"
+                               onclick="return confirm('Reopen this defense? The evaluation links will work again and evaluators will be able to submit or edit.')">
+                               ↻ Reopen
+                            </a>
                         {% endif %}
                     </div>
                 </td>
