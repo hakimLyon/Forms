@@ -197,6 +197,35 @@
         </div>
     </div>
 
+    {% if edit_url %}
+    <div class="result-card" style="border:1.5px dashed var(--aims-red); background:#fff8f8;">
+        <div style="font-weight:700; font-size:0.92rem; margin-bottom:0.4rem;">Your personal edit link</div>
+        <div style="font-size:0.78rem; color:#777; margin-bottom:0.7rem;">
+            Keep this link to edit your response later, even from another device.
+            It only works for your own response, while the defense is ongoing.
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <input id="editLinkInput" type="text" readonly value="{{ edit_url }}"
+                   style="flex:1; min-width:220px; padding:0.5rem 0.7rem; border:1px solid #ddd; border-radius:6px; font-size:0.78rem; color:#555; background:white;">
+            <button type="button" onclick="copyEditLink()"
+                    style="padding:0.5rem 1rem; background:var(--aims-red); color:white; border:none; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">
+                Copy
+            </button>
+        </div>
+    </div>
+    <script>
+    function copyEditLink() {
+        var inp = document.getElementById('editLinkInput');
+        inp.select();
+        inp.setSelectionRange(0, 99999);
+        if (navigator.clipboard) { navigator.clipboard.writeText(inp.value); }
+        else { document.execCommand('copy'); }
+        var btn = event.target; btn.textContent = 'Copied!';
+        setTimeout(function(){ btn.textContent = 'Copy'; }, 1500);
+    }
+    </script>
+    {% endif %}
+
     {# Scoreboard + final grade are coordinator-only (Google Forms "Responses" model). #}
     {% if is_coordinator %}
     <div class="scoreboard">

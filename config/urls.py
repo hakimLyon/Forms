@@ -28,6 +28,7 @@ urlpatterns = [
     path('defense/<str:token>/end/', views.end_defense_from_panel, name='end_defense_from_panel'),
     path('defense/<str:token>/eval/<int:member_index>/', views.evaluation_form, name='evaluation_form'),
     path('defense/<str:token>/result/<int:eval_id>/', views.evaluation_result, name='evaluation_result'),
+    path('defense/<str:token>/continue/<str:edit_token>/', views.evaluation_edit_link, name='evaluation_edit_link'),
     # Serve uploaded media in production (static is handled by WhiteNoise).
     re_path(r'^media/(?P<path>.*)$', media_serve, {'document_root': settings.MEDIA_ROOT}),
 ]

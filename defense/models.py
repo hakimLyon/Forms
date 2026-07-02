@@ -201,6 +201,9 @@ class Evaluation(models.Model):
     submitted_at        = models.DateTimeField(auto_now_add=True)
     # Browser session that submitted this evaluation - used to restrict edits
     submitted_by_session = models.CharField(max_length=64, blank=True)
+    # Secret per-response edit link token (Google Forms "Edit response" model):
+    # lets the evaluator resume/edit their own response from any device.
+    edit_token = models.CharField(max_length=64, blank=True, default='')
 
     def total_score_raw(self):
         """Total score - meaning depends on role: /50 for supervisor, /100 for examiner/president."""

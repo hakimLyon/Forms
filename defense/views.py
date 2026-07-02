@@ -223,6 +223,11 @@ def panel_members(request, token):
     # gets the per-evaluator grades and the provisional final grade.
     evaluations = all_evaluations if can_end else []
     scores = calc_scores(student, all_evaluations) if (can_end and all_evaluations) else None
+    if can_end:
+        # Attach each response's personal edit link so the coordinator can
+        # resend it to an evaluator who wants to resume from another device.
+        for ev in evaluations:
+            ev.edit_url = _build_edit_url(request, token, ev)
     return render(request, 'defense/panel_members.html', {
         'student': student,
         'members': members,
@@ -267,11 +272,18 @@ def evaluation_form(request, token, member_index):
         student=student, evaluator_name=member['name']
     ).first()
 
-    # Lock editing to the original submitter's browser session (admin/staff bypass)
+    # Lock editing to the original submitter's browser session (admin/staff bypass).
+    # A valid personal edit link (Google Forms "Edit response" model) also unlocks:
+    # visiting /defense/<token>/continue/<edit_token>/ stores the token in the
+    # visitor's session, allowing them to resume from any device.
     if existing and existing.submitted_by_session:
         is_owner = request.session.session_key == existing.submitted_by_session
         is_admin = request.user.is_staff
-        if not is_owner and not is_admin:
+        has_edit_token = bool(
+            existing.edit_token
+            and request.session.get('edit_tokens', {}).get(str(existing.id)) == existing.edit_token
+        )
+        if not is_owner and not is_admin and not has_edit_token:
             return render(request, 'defense/evaluation_locked.html', {
                 'student': student,
                 'member': member,
@@ -314,6 +326,8 @@ def evaluation_form(request, token, member_index):
 
         eval_obj.additional_info = request.POST.get('additional_info', '')
         eval_obj.submitted_by_session = request.session.session_key
+        if not eval_obj.edit_token:
+            eval_obj.edit_token = secrets.token_urlsafe(24)
         if 'annotated_document' in request.FILES:
             eval_obj.annotated_document = request.FILES['annotated_document']
         eval_obj.save()
@@ -340,6 +354,40 @@ def evaluation_form(request, token, member_index):
         context['form_max'] = 100
 
     return render(request, 'defense/evaluation_form.html', context)
+
+
+def evaluation_edit_link(request, token, edit_token):
+    """Personal edit link (Google Forms "Edit response"): whoever holds the
+    secret link can resume/edit that one response from any device.
+    Grants access by storing the token in the visitor's session, then sends
+    them to their pre-filled form."""
+    student = get_object_or_404(Student, start_link_token=token)
+    evaluation = get_object_or_404(Evaluation, student=student, edit_token=edit_token)
+    if student.defense_status != 'ongoing':
+        return render(request, 'defense/defense_closed.html', {'student': student})
+
+    if not request.session.session_key:
+        request.session.save()
+    tokens = request.session.get('edit_tokens', {})
+    tokens[str(evaluation.id)] = evaluation.edit_token
+    request.session['edit_tokens'] = tokens
+
+    members = student.get_panel_members()
+    member_index = 0
+    for i, m in enumerate(members):
+        if m['name'] == evaluation.evaluator_name:
+            member_index = i
+            break
+    return redirect('evaluation_form', token=token, member_index=member_index)
+
+
+def _build_edit_url(request, token, evaluation):
+    from django.urls import reverse
+    if not evaluation.edit_token:
+        return None
+    return request.build_absolute_uri(
+        reverse('evaluation_edit_link', args=[token, evaluation.edit_token])
+    )
 
 
 def evaluation_result(request, token, eval_id):
@@ -388,6 +436,10 @@ def evaluation_result(request, token, eval_id):
                 'final_label': scores['final_grade'],
             }
 
+    # Personal edit link (shown to the response owner and to the coordinator
+    # so they can resend it to an evaluator who switched devices).
+    edit_url = _build_edit_url(request, token, evaluation) if (is_owner or is_coordinator) else None
+
     return render(request, 'defense/evaluation_result.html', {
         'evaluation': evaluation,
         'student': student,
@@ -396,6 +448,7 @@ def evaluation_result(request, token, eval_id):
         'eval_rows': eval_rows,
         'final_grade_info': final_grade_info,
         'is_coordinator': is_coordinator,
+        'edit_url': edit_url,
     })
 
 

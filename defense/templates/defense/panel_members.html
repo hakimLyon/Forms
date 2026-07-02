@@ -144,6 +144,7 @@
                 <th style="padding:0.5rem 0.6rem;">Role</th>
                 <th style="padding:0.5rem 0.6rem; text-align:right;">Score /100</th>
                 <th style="padding:0.5rem 0.6rem;">Grade</th>
+                <th style="padding:0.5rem 0.6rem;">Edit link</th>
             </tr>
         </thead>
         <tbody>
@@ -153,11 +154,35 @@
                 <td style="padding:0.5rem 0.6rem;">{{ ev.get_role_display }}</td>
                 <td style="padding:0.5rem 0.6rem; text-align:right; font-weight:700;">{{ ev.total_score_percent|floatformat:2 }}</td>
                 <td style="padding:0.5rem 0.6rem;">{{ ev.grade_label }}</td>
+                <td style="padding:0.5rem 0.6rem;">
+                    {% if ev.edit_url %}
+                    <button type="button" onclick="copyEditUrl(this, '{{ ev.edit_url }}')"
+                            style="padding:0.25rem 0.7rem; background:#e3f2fd; color:#1565c0; border:none; border-radius:6px; font-size:0.75rem; font-weight:600; cursor:pointer;">
+                        Copy
+                    </button>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     </div>
+    <div style="font-size:0.7rem; color:#aaa; margin-top:0.4rem;">
+        "Copy" gives that evaluator's personal edit link &mdash; send it to them if they need
+        to modify their response from another device (valid while the defense is ongoing).
+    </div>
+    <script>
+    function copyEditUrl(btn, url) {
+        if (navigator.clipboard) { navigator.clipboard.writeText(url); }
+        else {
+            var t = document.createElement('textarea');
+            t.value = url; document.body.appendChild(t);
+            t.select(); document.execCommand('copy'); document.body.removeChild(t);
+        }
+        var old = btn.textContent; btn.textContent = 'Copied!';
+        setTimeout(function(){ btn.textContent = old; }, 1500);
+    }
+    </script>
 
     {% if scores %}
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; margin-top:1.1rem; padding-top:1rem; border-top:2px solid #eee;">
