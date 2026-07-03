@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse, Http404
 from django.utils import timezone
 from django.contrib import messages
 import secrets, io, json
@@ -158,6 +158,21 @@ def reopen_defense(request, student_id):
     return redirect('room_students',
                     session_id=student.session_id,
                     room_number=student.room)
+
+
+@require_auth
+def download_annotated(request, eval_id):
+    """Download the annotated thesis PDF an evaluator attached to their
+    evaluation (coordinator side; media/ URLs are not linked directly)."""
+    import os as _os
+    evaluation = get_object_or_404(Evaluation, pk=eval_id)
+    if not evaluation.annotated_document:
+        raise Http404
+    return FileResponse(
+        evaluation.annotated_document.open('rb'),
+        as_attachment=True,
+        filename=_os.path.basename(evaluation.annotated_document.name),
+    )
 
 
 @require_auth

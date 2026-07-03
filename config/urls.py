@@ -20,6 +20,7 @@ urlpatterns = [
     path('student/<int:student_id>/start/', views.start_defense, name='start_defense'),
     path('student/<int:student_id>/end/', views.end_defense, name='end_defense'),
     path('student/<int:student_id>/reopen/', views.reopen_defense, name='reopen_defense'),
+    path('evaluation/<int:eval_id>/annotated/', views.download_annotated, name='download_annotated'),
     path('student/<int:student_id>/pv/', views.pv_overview, name='pv_overview'),
     path('student/<int:student_id>/pv/<str:fmt>/', views.download_pv, name='download_pv'),
     path('student/<int:student_id>/detail/', views.student_detail, name='student_detail'),
