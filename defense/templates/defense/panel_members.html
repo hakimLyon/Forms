@@ -142,7 +142,7 @@
             <tr style="text-align:left; border-bottom:2px solid #eee; color:#777;">
                 <th style="padding:0.5rem 0.6rem;">Evaluator</th>
                 <th style="padding:0.5rem 0.6rem;">Role</th>
-                <th style="padding:0.5rem 0.6rem; text-align:right;">Score /100</th>
+                <th style="padding:0.5rem 0.6rem; text-align:right;">Score</th>
                 <th style="padding:0.5rem 0.6rem;">Grade</th>
                 <th style="padding:0.5rem 0.6rem;">Edit link</th>
             </tr>
@@ -152,7 +152,7 @@
             <tr style="border-bottom:1px solid #f2f2f2;">
                 <td style="padding:0.5rem 0.6rem; font-weight:600;">{{ ev.evaluator_name }}</td>
                 <td style="padding:0.5rem 0.6rem;">{{ ev.get_role_display }}</td>
-                <td style="padding:0.5rem 0.6rem; text-align:right; font-weight:700;">{{ ev.total_score_percent|floatformat:2 }}</td>
+                <td style="padding:0.5rem 0.6rem; text-align:right; font-weight:700;">{{ ev.total_score_raw }}/{{ ev.total_score_max }}</td>
                 <td style="padding:0.5rem 0.6rem;">{{ ev.grade_label }}</td>
                 <td style="padding:0.5rem 0.6rem;">
                     {% if ev.edit_url %}
@@ -193,8 +193,15 @@
             </div>
         </div>
         <div style="text-align:right;">
+            {% if scores.final_complete %}
             <div style="font-size:1.8rem; font-weight:800; color:var(--aims-red); line-height:1;">{{ scores.final_score }}<span style="font-size:1rem; color:#999;">/100</span></div>
             <div style="font-size:0.9rem; font-weight:700; color:var(--green,#1a8f3c);">{{ scores.final_grade }}</div>
+            {% else %}
+            <div style="font-size:1.1rem; font-weight:700; color:#999; line-height:1.2;">Pending</div>
+            <div style="font-size:0.72rem; color:#b8860b; max-width:220px;">
+                Waiting for {% if not scores.has_sup %}supervisor{% endif %}{% if not scores.has_sup and not scores.has_exam %} &amp; {% endif %}{% if not scores.has_exam %}examiner / jury president{% endif %} evaluation(s)
+            </div>
+            {% endif %}
         </div>
     </div>
     {% endif %}

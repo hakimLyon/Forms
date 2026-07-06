@@ -493,6 +493,9 @@ def evaluation_result(request, token, eval_id):
             final_grade_info = {
                 'final_score': scores['final_score'],
                 'final_label': scores['final_grade'],
+                'complete': scores['final_complete'],
+                'has_sup': scores['has_sup'],
+                'has_exam': scores['has_exam'],
             }
 
     # Personal edit link (shown to the response owner and to the coordinator
@@ -541,6 +544,10 @@ def pv_overview(request, student_id):
         'exam_avg': round(exam_avg, 2),
         'final_score': round(final, 2),
         'final_grade': grade_label(final),
+        # Final grade only meaningful once both sides submitted.
+        'final_complete': bool(sup_scores) and bool(exam_scores),
+        'has_sup': bool(sup_scores),
+        'has_exam': bool(exam_scores),
     })
 
 
@@ -626,6 +633,9 @@ def student_detail(request, student_id):
         final_grade_info = {
             'final_score': scores['final_score'],
             'final_label': scores['final_grade'],
+            'complete': scores['final_complete'],
+            'has_sup': scores['has_sup'],
+            'has_exam': scores['has_exam'],
         }
 
     return render(request, 'defense/student_detail.html', {

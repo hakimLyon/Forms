@@ -99,8 +99,15 @@
         </div>
     </div>
     <div class="final-score">
+        {% if final_complete %}
         <div class="num">{{ final_score }}<span style="font-size:1.2rem;color:#888;">/100</span></div>
         <div class="grade">{{ final_grade }}</div>
+        {% else %}
+        <div class="num" style="font-size:1.4rem;color:#999;">Pending</div>
+        <div class="grade" style="color:#b8860b;font-weight:600;font-size:0.8rem;max-width:220px;">
+            Waiting for {% if not has_sup %}supervisor{% endif %}{% if not has_sup and not has_exam %} &amp; {% endif %}{% if not has_exam %}examiner / jury president{% endif %} evaluation(s)
+        </div>
+        {% endif %}
     </div>
 </div>
 

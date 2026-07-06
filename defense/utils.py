@@ -268,6 +268,12 @@ def calc_scores(student, evaluations):
         elif pct >= 60: return "Pass"
         else: return "Fail"
 
+    # The weighted final grade is only meaningful once BOTH sides have
+    # submitted; otherwise the missing 40%/60% part counts as 0 and the
+    # number looks like a Fail. Expose completeness so the UI can hide it.
+    has_sup = bool(sup_scores)
+    has_exam = bool(exam_scores)
+    final_complete = has_sup and has_exam
     return {
         'supervisor_evals': supervisor_evals,
         'examiner_evals': examiner_evals,
@@ -275,6 +281,9 @@ def calc_scores(student, evaluations):
         'exam_avg': round(exam_avg, 2),
         'final_score': round(final, 2),
         'final_grade': grade(final),
+        'has_sup': has_sup,
+        'has_exam': has_exam,
+        'final_complete': final_complete,
     }
 
 

@@ -95,9 +95,16 @@
 {% if final_grade_info %}
 <div class="final-summary">
     <div class="fs-label">Student's Final Grade</div>
+    {% if final_grade_info.complete %}
     <div class="fs-score">{{ final_grade_info.final_score }}<span style="font-size:1.2rem;opacity:0.7;">/100</span></div>
     <div class="fs-grade">{{ final_grade_info.final_label }}</div>
     <div style="font-size:0.78rem;opacity:0.75;margin-top:0.8rem;">This will count on the Final Marks</div>
+    {% else %}
+    <div class="fs-score" style="font-size:1.4rem;">Pending</div>
+    <div style="font-size:0.82rem;opacity:0.85;margin-top:0.6rem;">
+        Final grade will be computed once {% if not final_grade_info.has_sup %}the supervisor{% endif %}{% if not final_grade_info.has_sup and not final_grade_info.has_exam %} and {% endif %}{% if not final_grade_info.has_exam %}the examiner / jury president{% endif %} evaluation(s) are submitted.
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 {% endif %}
