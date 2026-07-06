@@ -109,6 +109,14 @@ def import_excel_students(session, file_obj):
     df = pd.read_excel(file_obj, engine='openpyxl')
     count = 0
     for _, row in df.iterrows():
+        def col(*names):
+            """First non-empty value among the candidate column names."""
+            for n in names:
+                v = clean_name(row.get(n, ''))
+                if v:
+                    return v
+            return ''
+
         surname = clean_name(row.get('Surname', ''))
         given = clean_name(row.get('Given Names', ''))
         if not surname and not given:
@@ -135,21 +143,28 @@ def import_excel_students(session, file_obj):
             thesis_title=clean_name(row.get('Research Project title', '')),
             room=room,
             defense_date=def_date,
-            supervisor_1_name=clean_name(row.get('Academic Supervisors', '')),
-            supervisor_1_email=clean_name(row.get('Email of Supervisor ', row.get('Email of Supervisor', ''))),
-            supervisor_1_institution=clean_name(row.get('Institution of Supervisors', '')),
-            supervisor_2_name=clean_name(row.get('Academic Supervisors 2', '')),
-            supervisor_2_email=clean_name(row.get('Email of Supervisor 2', '')),
-            jury_president_name=clean_name(row.get('President Jury', '')),
-            jury_president_email=clean_name(row.get('Email', '')),
-            jury_president_affiliation=clean_name(row.get('Affiliation ', row.get('Affiliation', ''))),
-            examiner_1_name=clean_name(row.get('Examiner 1', '')),
-            examiner_1_email=clean_name(row.get('Examiner 1 email', '')),
-            examiner_1_affiliation=clean_name(row.get('Affiliation', '')),
-            examiner_2_name=clean_name(row.get('Examiner 2', '')),
-            examiner_2_email=clean_name(row.get('Examiner 2 email', '')),
-            examiner_3_name=clean_name(row.get('Examiner 3', '')),
-            examiner_3_email=clean_name(row.get('Examiner 3 email', '')),
+            supervisor_1_name=col('Academic Supervisors'),
+            supervisor_1_email=col('Email of Supervisor ', 'Email of Supervisor'),
+            supervisor_1_institution=col('Institution of Supervisors'),
+            supervisor_2_name=col('Academic Supervisors 2'),
+            supervisor_2_email=col('Email of Supervisor 2'),
+            supervisor_2_institution=col('Institution of Supervisor 2',
+                                         'Institution of Supervisors 2'),
+            jury_president_name=col('President Jury'),
+            jury_president_email=col('Email'),
+            # Explicit headers first; legacy Coop files used duplicated
+            # "Affiliation" columns which pandas renames to Affiliation.1/.2
+            jury_president_affiliation=col('President Jury Affiliation',
+                                           'Affiliation ', 'Affiliation'),
+            examiner_1_name=col('Examiner 1'),
+            examiner_1_email=col('Examiner 1 email'),
+            examiner_1_affiliation=col('Examiner 1 Affiliation', 'Affiliation'),
+            examiner_2_name=col('Examiner 2'),
+            examiner_2_email=col('Examiner 2 email'),
+            examiner_2_affiliation=col('Examiner 2 Affiliation', 'Affiliation.1'),
+            examiner_3_name=col('Examiner 3'),
+            examiner_3_email=col('Examiner 3 email'),
+            examiner_3_affiliation=col('Examiner 3 Affiliation', 'Affiliation.2'),
         )
         s.save()
         count += 1
@@ -161,11 +176,11 @@ IMPORT_TEMPLATE_COLUMNS = [
     'IDStudent', 'Date', 'Time (GMT)', 'Room',
     'Surname', 'Given Names', 'Research Project title',
     'Academic Supervisors', 'Email of Supervisor', 'Institution of Supervisors',
-    'Academic Supervisors 2', 'Email of Supervisor 2',
-    'President Jury', 'Email', 'Affiliation',
-    'Examiner 1', 'Examiner 1 email',
-    'Examiner 2', 'Examiner 2 email',
-    'Examiner 3', 'Examiner 3 email',
+    'Academic Supervisors 2', 'Email of Supervisor 2', 'Institution of Supervisor 2',
+    'President Jury', 'Email', 'President Jury Affiliation',
+    'Examiner 1', 'Examiner 1 email', 'Examiner 1 Affiliation',
+    'Examiner 2', 'Examiner 2 email', 'Examiner 2 Affiliation',
+    'Examiner 3', 'Examiner 3 email', 'Examiner 3 Affiliation',
 ]
 
 
@@ -195,11 +210,14 @@ def build_import_template():
         'Email of Supervisor': 'jdoe@example.com',
         'Institution of Supervisors': 'AIMS Senegal',
         'Academic Supervisors 2': '', 'Email of Supervisor 2': '',
+        'Institution of Supervisor 2': '',
         'President Jury': 'Prof. Marie Sow', 'Email': 'msow@example.com',
-        'Affiliation': 'UCAD',
+        'President Jury Affiliation': 'UCAD, Senegal',
         'Examiner 1': 'Dr. Alpha Ba', 'Examiner 1 email': 'aba@example.com',
+        'Examiner 1 Affiliation': 'ESP, Senegal',
         'Examiner 2': 'Dr. Bineta Fall', 'Examiner 2 email': 'bfall@example.com',
-        'Examiner 3': '', 'Examiner 3 email': '',
+        'Examiner 2 Affiliation': 'UGB, Senegal',
+        'Examiner 3': '', 'Examiner 3 email': '', 'Examiner 3 Affiliation': '',
     }
     for col, name in enumerate(IMPORT_TEMPLATE_COLUMNS, start=1):
         ws.cell(row=2, column=col, value=example.get(name, ''))
@@ -209,6 +227,27 @@ def build_import_template():
     wb.save(buf)
     buf.seek(0)
     return buf
+
+
+def committee_display_name(student, ev):
+    """'Name, Affiliation' as printed in the PV committee table (Word & PDF)."""
+    name = ev.evaluator_name
+    affil = ''
+    if ev.role == 'supervisor':
+        if name == student.supervisor_2_name:
+            affil = student.supervisor_2_institution
+        else:
+            affil = student.supervisor_1_institution
+    elif ev.role == 'president':
+        affil = student.jury_president_affiliation
+    elif ev.role == 'examiner':
+        if name == student.examiner_1_name:
+            affil = student.examiner_1_affiliation
+        elif name == student.examiner_2_name:
+            affil = student.examiner_2_affiliation
+        elif name == student.examiner_3_name:
+            affil = student.examiner_3_affiliation
+    return f"{name}, {affil}" if affil else name
 
 
 def calc_scores(student, evaluations):
@@ -377,10 +416,16 @@ def generate_pv_docx(student, evaluations):
     student_id = student.id_student or student.session.academic_year
     add_field('Student:', f'{student.full_name()} - ID-{student_id}')
 
-    # Supervisor(s)
-    add_field('Supervisor:', student.supervisor_1_name)
+    # Supervisor(s) - with institution when available
+    sup1 = student.supervisor_1_name
+    if student.supervisor_1_institution:
+        sup1 = f"{sup1}, {student.supervisor_1_institution}"
+    add_field('Supervisor:', sup1)
     if student.supervisor_2_name:
-        add_field('Co-Supervisor:', student.supervisor_2_name)
+        sup2 = student.supervisor_2_name
+        if student.supervisor_2_institution:
+            sup2 = f"{sup2}, {student.supervisor_2_institution}"
+        add_field('Co-Supervisor:', sup2)
 
     # Dissertation title - strip any URLs, wraps naturally onto next line
     clean_title = re.sub(r'https?://\S+', '', student.thesis_title).strip()
@@ -515,19 +560,7 @@ def generate_pv_docx(student, evaluations):
 
     # Data rows – each evaluator
     for ev in evaluations:
-        name_with_affil = ev.evaluator_name
-        # append institution if available
-        if ev.role == 'supervisor' and student.supervisor_1_institution:
-            if ev.evaluator_name == student.supervisor_1_name:
-                name_with_affil = f"{ev.evaluator_name}, {student.supervisor_1_institution}"
-        elif ev.role == 'president' and student.jury_president_affiliation:
-            name_with_affil = f"{ev.evaluator_name}, {student.jury_president_affiliation}"
-        elif ev.role == 'examiner':
-            if ev.evaluator_name == student.examiner_1_name and student.examiner_1_affiliation:
-                name_with_affil = f"{ev.evaluator_name}, {student.examiner_1_affiliation}"
-            elif ev.evaluator_name == student.examiner_2_name and student.examiner_2_affiliation:
-                name_with_affil = f"{ev.evaluator_name}, {student.examiner_2_affiliation}"
-        add_table_row(name_with_affil, ev.grade_label(), col1_size=11.5)
+        add_table_row(committee_display_name(student, ev), ev.grade_label(), col1_size=11.5)
 
     # Build final grade formula correctly
     examiners  = [e for e in evaluations if e.role == 'examiner']
@@ -693,9 +726,15 @@ def generate_pv_pdf(student, evaluations):
 
     field('Defense date:', defense_date_str)
     field('Student:', f'{student.full_name()} - ID-{student.id_student or student.session.academic_year}')
-    field('Supervisor:', student.supervisor_1_name)
+    sup1 = student.supervisor_1_name
+    if student.supervisor_1_institution:
+        sup1 = f"{sup1}, {student.supervisor_1_institution}"
+    field('Supervisor:', sup1)
     if student.supervisor_2_name:
-        field('Co-Supervisor:', student.supervisor_2_name)
+        sup2 = student.supervisor_2_name
+        if student.supervisor_2_institution:
+            sup2 = f"{sup2}, {student.supervisor_2_institution}"
+        field('Co-Supervisor:', sup2)
 
     clean_title = re.sub(r'https?://\S+', '', student.thesis_title).strip()
     clean_title = re.sub(r'\s+', ' ', clean_title).rstrip(':').strip()
@@ -716,19 +755,8 @@ def generate_pv_pdf(student, evaluations):
     t_data = [[Paragraph('Committee members', header_cell_style),
                Paragraph('Decision', header_cell_style_center)]]
     for ev in evaluations:
-        name_with_affil = ev.evaluator_name
-        if ev.role == 'supervisor' and student.supervisor_1_institution:
-            if ev.evaluator_name == student.supervisor_1_name:
-                name_with_affil = f"{ev.evaluator_name}, {student.supervisor_1_institution}"
-        elif ev.role == 'president' and student.jury_president_affiliation:
-            name_with_affil = f"{ev.evaluator_name}, {student.jury_president_affiliation}"
-        elif ev.role == 'examiner':
-            if ev.evaluator_name == student.examiner_1_name and student.examiner_1_affiliation:
-                name_with_affil = f"{ev.evaluator_name}, {student.examiner_1_affiliation}"
-            elif ev.evaluator_name == student.examiner_2_name and student.examiner_2_affiliation:
-                name_with_affil = f"{ev.evaluator_name}, {student.examiner_2_affiliation}"
         t_data.append([
-            Paragraph(name_with_affil, cell_style),
+            Paragraph(committee_display_name(student, ev), cell_style),
             Paragraph(ev.grade_label(), cell_style_center),
         ])
 

@@ -80,6 +80,7 @@ class Student(models.Model):
     supervisor_1_institution = models.CharField(max_length=200, blank=True)
     supervisor_2_name        = models.CharField(max_length=200, blank=True)
     supervisor_2_email       = models.CharField(max_length=200, blank=True)
+    supervisor_2_institution = models.CharField(max_length=200, blank=True)
 
     jury_president_name        = models.CharField(max_length=200, blank=True)
     jury_president_email       = models.CharField(max_length=200, blank=True)
