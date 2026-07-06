@@ -4,6 +4,12 @@
 {% block extra_css %}
 <style>
 .eval-form-wrap { max-width: 760px; margin: 0 auto; }
+.form-section-title {
+    font-size: 1.6rem; font-weight: 800; color: var(--aims-red);
+    margin: 2rem 0 1rem; padding-bottom: 0.5rem;
+    border-bottom: 3px solid var(--aims-red); letter-spacing: 0.3px;
+}
+.form-section-title small { display:block; font-size: 0.85rem; font-weight: 600; color: #888; margin-top: 0.2rem; letter-spacing: 0; }
 .form-hero {
     background: var(--aims-red); color: white;
     border-radius: 14px; padding: 1.8rem 2rem; margin-bottom: 2rem;
@@ -189,6 +195,7 @@
         {% endfor %}
 
         {% else %}
+        <div class="form-section-title">Written Thesis Evaluation <small>Questions 1 – 6</small></div>
         {% for field_name, question in examiner_questions %}
         <div class="score-section">
             <h4>{{ forloop.counter }}. {{ question.title }}</h4>
@@ -210,8 +217,8 @@
         </div>
         {% endfor %}
 
+        <div class="form-section-title">Oral Presentation Evaluation <small>Question {{ examiner_questions|length|add:1 }} — score each item from 2 to 10 (10 = highest, 2 = lowest)</small></div>
         <div class="presentation-block-wrap">
-            <h4>{{ examiner_questions|length|add:1 }}. Presentation (Score from 2 to 10, where 10 is the highest mark and 2 is the lowest mark)</h4>
             {% for field_name, label in presentation_block %}
             <div class="presentation-item">
                 <div class="pi-label">{{ label }}</div>
