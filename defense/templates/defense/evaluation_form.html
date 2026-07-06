@@ -149,6 +149,7 @@
                     go back to the panel and pick your own block.
                 </div>
             </div>
+            {% if member.role == 'supervisor' %}
             <div class="form-group">
                 <label>Any research paper coming out from the project? <span class="req">*</span></label>
                 <div class="radio-group">
@@ -164,6 +165,7 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
 
         {% if member.role == 'supervisor' %}
