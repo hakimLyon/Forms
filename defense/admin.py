@@ -46,8 +46,8 @@ class StudentAdmin(admin.ModelAdmin):
     reset_start.short_description = "Reset defense start (admin)"
 
     fieldsets = (
-        ('Student Info', {'fields': ('session', 'time', 'surname', 'given_names', 'thesis_title', 'room', 'defense_date')}),
-        ('Supervisor(s)', {'fields': ('supervisor_1_name', 'supervisor_1_email', 'supervisor_1_institution', 'supervisor_2_name', 'supervisor_2_email')}),
+        ('Student Info', {'fields': ('session', 'id_student', 'time', 'surname', 'given_names', 'thesis_title', 'room', 'defense_date')}),
+        ('Supervisor(s)', {'fields': ('supervisor_1_name', 'supervisor_1_email', 'supervisor_1_institution', 'supervisor_2_name', 'supervisor_2_email', 'supervisor_2_institution')}),
         ('Jury President', {'fields': ('jury_president_name', 'jury_president_email', 'jury_president_affiliation')}),
         ('Examiners', {'fields': ('examiner_1_name', 'examiner_1_email', 'examiner_1_affiliation', 'examiner_2_name', 'examiner_2_email', 'examiner_2_affiliation', 'examiner_3_name', 'examiner_3_email', 'examiner_3_affiliation')}),
         ('Status', {'fields': ('defense_status', 'started_at', 'ended_at', 'start_link_token')}),
