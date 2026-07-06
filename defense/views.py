@@ -88,7 +88,11 @@ def _absolute_uri(request, path):
 def room_students(request, session_id, room_number):
     from django.urls import reverse
     session = get_object_or_404(Session, pk=session_id)
-    students = list(Student.objects.filter(session=session, room=room_number).order_by('time'))
+    from django.db.models import F
+    students = list(
+        Student.objects.filter(session=session, room=room_number)
+        .order_by(F('defense_date').asc(nulls_last=True), 'time')
+    )
 
     # Shareable links are built server-side (the old template-side string
     # concatenation silently produced an empty URL).
@@ -226,10 +230,11 @@ def room_public(request, session_id, room_number):
     (thesis title + Enter button leading to the panel/evaluation forms).
     """
     session = get_object_or_404(Session, pk=session_id)
+    from django.db.models import F
     students = Student.objects.filter(
         session=session, room=room_number,
         defense_status='ongoing'
-    ).order_by('time')
+    ).order_by(F('defense_date').asc(nulls_last=True), 'time')
 
     return render(request, 'defense/room_public.html', {
         'session': session,
