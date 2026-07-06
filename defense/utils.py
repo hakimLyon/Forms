@@ -412,9 +412,9 @@ def generate_pv_docx(student, evaluations):
 
     add_field('Defense date:', defense_date_str)
 
-    # Student line: "Given Names Surname - ID-<IDStudent>"
+    # Student line: "Given Names Surname - ID: <IDStudent>"
     student_id = student.id_student or student.session.academic_year
-    add_field('Student:', f'{student.full_name()} - ID-{student_id}')
+    add_field('Student:', f'{student.full_name()} - ID: {student_id}')
 
     # Supervisor(s) - with institution when available
     sup1 = student.supervisor_1_name
@@ -725,7 +725,7 @@ def generate_pv_pdf(student, evaluations):
         defense_date_str = d.strftime('%B %d, %Y') if hasattr(d, 'strftime') else str(d)
 
     field('Defense date:', defense_date_str)
-    field('Student:', f'{student.full_name()} - ID-{student.id_student or student.session.academic_year}')
+    field('Student:', f'{student.full_name()} - ID: {student.id_student or student.session.academic_year}')
     sup1 = student.supervisor_1_name
     if student.supervisor_1_institution:
         sup1 = f"{sup1}, {student.supervisor_1_institution}"
