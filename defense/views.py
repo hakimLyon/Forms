@@ -3,9 +3,20 @@ from django.conf import settings
 from django.http import HttpResponse, FileResponse, Http404
 from django.utils import timezone
 from django.contrib import messages
-import secrets, io, json
+import secrets, io, json, re
+from datetime import date as _date
 
 from .models import SitePassword, Session, Student, Evaluation
+
+
+def _schedule_key(student):
+    """Sort key for the room schedule: by defense date (undated last),
+    then by the numeric hour parsed from the free-text time field
+    ('9h' must come before '16h', not after it as string sort would do)."""
+    d = student.defense_date
+    m = re.search(r'\d+', student.time or '')
+    hour = int(m.group()) if m else 99
+    return (0, d, hour, student.time or '') if d else (1, _date.max, hour, student.time or '')
 from .utils import (
     import_excel_students, generate_pv_docx, generate_pv_pdf, calc_scores,
     SUPERVISOR_QUESTIONS, EXAMINER_QUESTIONS, PRESENTATION_BLOCK,
@@ -88,10 +99,9 @@ def _absolute_uri(request, path):
 def room_students(request, session_id, room_number):
     from django.urls import reverse
     session = get_object_or_404(Session, pk=session_id)
-    from django.db.models import F
-    students = list(
-        Student.objects.filter(session=session, room=room_number)
-        .order_by(F('defense_date').asc(nulls_last=True), 'time')
+    students = sorted(
+        Student.objects.filter(session=session, room=room_number),
+        key=_schedule_key,
     )
 
     # Shareable links are built server-side (the old template-side string
@@ -230,11 +240,12 @@ def room_public(request, session_id, room_number):
     (thesis title + Enter button leading to the panel/evaluation forms).
     """
     session = get_object_or_404(Session, pk=session_id)
-    from django.db.models import F
-    students = Student.objects.filter(
-        session=session, room=room_number,
-        defense_status='ongoing'
-    ).order_by(F('defense_date').asc(nulls_last=True), 'time')
+    students = sorted(
+        Student.objects.filter(
+            session=session, room=room_number, defense_status='ongoing'
+        ),
+        key=_schedule_key,
+    )
 
     return render(request, 'defense/room_public.html', {
         'session': session,
