@@ -234,10 +234,10 @@ def import_excel(request, session_id):
 
 def room_public(request, session_id, room_number):
     """
-    Public room page, fixed predictable URL e.g. /sessions/1/room/1/public/
-    Accessible to anyone with the link - no token required.
-    Shows all ONGOING defenses in this room as clickable cards
-    (thesis title + Enter button leading to the panel/evaluation forms).
+    Fixed per-room link shared with the jury. It behaves as a DIRECT link:
+    it redirects straight to the panel of the defense currently in progress
+    in this room (no intermediate listing page). If none is ongoing, it
+    shows a short 'no defense in progress' message.
     """
     session = get_object_or_404(Session, pk=session_id)
     students = sorted(
@@ -246,6 +246,9 @@ def room_public(request, session_id, room_number):
         ),
         key=_schedule_key,
     )
+    if students:
+        # Straight to the current defense's panel.
+        return redirect('panel_members', token=students[0].start_link_token)
 
     return render(request, 'defense/room_public.html', {
         'session': session,
