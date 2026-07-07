@@ -262,12 +262,13 @@ def room_public_legacy(request, session_id, room_number, room_token):
 # ─── Per-student defense flow (public, token-gated) ──────────────────────────
 
 def defense_entry(request, token):
-    """Entry page for a single student defense - shown to evaluators."""
+    """The per-defense link goes straight to the panel (skip the extra
+    'Enter Evaluation' landing page). The panel already shows the thesis
+    context and handles the closed-defense case."""
     student = get_object_or_404(Student, start_link_token=token)
     if student.defense_status != 'ongoing':
         return render(request, 'defense/defense_closed.html', {'student': student})
-    return render(request, 'defense/defense_entry.html',
-                  {'student': student, 'token': token})
+    return redirect('panel_members', token=token)
 
 
 def panel_members(request, token):
