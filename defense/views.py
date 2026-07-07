@@ -291,11 +291,22 @@ def panel_members(request, token):
     # gets the per-evaluator grades and the provisional final grade.
     evaluations = all_evaluations if can_end else []
     scores = calc_scores(student, all_evaluations) if (can_end and all_evaluations) else None
+    member_links = []
     if can_end:
+        from django.urls import reverse
         # Attach each response's personal edit link so the coordinator can
         # resend it to an evaluator who wants to resume from another device.
         for ev in evaluations:
             ev.edit_url = _build_edit_url(request, token, ev)
+        # Direct per-member link -> goes straight to that member's own form,
+        # so the coordinator can send each jury member their own link.
+        for i, m in enumerate(members):
+            member_links.append({
+                'name': m['name'],
+                'label': m['label'],
+                'submitted': m['name'] in submitted_names,
+                'url': _absolute_uri(request, reverse('evaluation_form', args=[token, i])),
+            })
     return render(request, 'defense/panel_members.html', {
         'student': student,
         'members': members,
@@ -304,6 +315,7 @@ def panel_members(request, token):
         'evaluations': evaluations,
         'scores': scores,
         'can_end': can_end,
+        'member_links': member_links,
     })
 
 
