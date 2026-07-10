@@ -855,10 +855,12 @@ def get_evaluation_detail_rows(evaluation):
     rows.append(('Student full name', evaluation.student_full_name))
     rows.append(('Title of project', evaluation.thesis_title_confirmed))
     rows.append(('You are', evaluation.get_role_display()))
-    rows.append(('Research paper coming out from the project',
-                  'Yes' if evaluation.research_paper else 'No'))
 
     if evaluation.role == 'supervisor':
+        # Only supervisors are asked whether a research paper comes out of
+        # the project, so only their evaluations report that answer.
+        rows.append(('Research paper coming out from the project',
+                     'Yes' if evaluation.research_paper else 'No'))
         for field_name, question in SUPERVISOR_QUESTIONS:
             score = getattr(evaluation, field_name, 0)
             rows.append((question['title'], f'{score} / 10'))
