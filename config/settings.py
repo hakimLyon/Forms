@@ -2,7 +2,9 @@ from pathlib import Path
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-aims-senegal-defense-key-2024')
+# Set in the host's environment (Coolify); a key in this public repo would let
+# anyone sign cookies for the site.
+SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
